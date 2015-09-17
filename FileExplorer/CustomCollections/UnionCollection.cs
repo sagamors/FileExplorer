@@ -229,8 +229,10 @@ namespace FileExplorer.CustomCollections
 
         private void SecondOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+
             NotifyCollectionChangedEventArgs args = new NotifyCollectionChangedEventArgs(e.Action, e.NewItems,
                 e.NewStartingIndex + First.Count, e.OldStartingIndex + First.Count);
+
             OnCollectionChanged(this, args);
         }
 

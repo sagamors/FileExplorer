@@ -42,6 +42,7 @@ namespace FileExplorer.CustomCollections
             }
         }
 
+
         #endregion
 
         #region constructor

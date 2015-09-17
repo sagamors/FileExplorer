@@ -12,7 +12,6 @@
         Height="800"
         WindowStartupLocation="CenterScreen"
         mc:Ignorable="d">
-
     <Window.DataContext>
         <viewModels:MainViewModel />
     </Window.DataContext>

@@ -131,7 +131,7 @@ namespace FileExplorer.ViewModels
             Children =
                 new UnionCollection<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel>(
                     SubDirectories, Files);
-            OpenCommand = new RelayCommand(() => Open());
+            OpenCommand = new RelayCommand(Open);
         }
 
         #endregion
