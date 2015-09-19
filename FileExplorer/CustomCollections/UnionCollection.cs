@@ -230,15 +230,40 @@ namespace FileExplorer.CustomCollections
         private void SecondOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
 
-            NotifyCollectionChangedEventArgs args = new NotifyCollectionChangedEventArgs(e.Action, e.NewItems,
-                e.NewStartingIndex + First.Count, e.OldStartingIndex + First.Count);
-
-            OnCollectionChanged(this, args);
+            OnSourceCollectionChanged(e, Second.Count);
         }
 
         private void First_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             OnCollectionChanged(this, e);
+        }
+
+        private void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        {
+            OnCollectionChanged(this, e);
+        }
+
+        private void OnSourceCollectionChanged(NotifyCollectionChangedEventArgs e, int offset)
+        {
+
+            switch (e.Action)
+            {
+                    case NotifyCollectionChangedAction.Add:
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, e.NewItems, e.NewStartingIndex + offset));
+                    break;
+                case NotifyCollectionChangedAction.Move:
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, e.NewItems, e.NewStartingIndex + offset, e.OldStartingIndex+ offset));
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, e.NewItems, e.NewStartingIndex + offset));
+                    break;
+                case NotifyCollectionChangedAction.Replace:
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action,e.NewItems,e.NewStartingIndex + offset));
+                    break;
+                case NotifyCollectionChangedAction.Reset:
+                         OnCollectionChanged(e);
+                    break;
+            }
         }
 
         #endregion
