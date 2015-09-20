@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,11 +19,12 @@ namespace FileExplorer.CustomCollections
 
         #region private fields
 
-        private readonly TimeSpan LongLoadingTime = new TimeSpan(0, 0, 0, 1);
+        private readonly TimeSpan _longLoadingTime = new TimeSpan(0, 0, 0, 1);
         private readonly IItemsProvider<T> _provider;
         private ObservableCollection<T> _collection = new ObservableCollection<T>();
         private SynchronizationContext _synchronizationContext;
         private Timer timer;
+        private Progress<int> _progress = new Progress<int>();
 
         #endregion
 
@@ -34,6 +36,8 @@ namespace FileExplorer.CustomCollections
         public bool HasItems { get; private set; }
 
         private int _count = 0;
+        private int _progressLoading;
+
         public override int Count
         {
             get
@@ -42,6 +46,18 @@ namespace FileExplorer.CustomCollections
             }
         }
 
+        public int ProgressLoading
+        {
+            private set
+            {
+                if(_progressLoading==value) return;
+                _progressLoading = value;
+                OnProgressChanged();
+            }
+            get { return _progressLoading; }
+        }
+
+        public event EventHandler<ProgressChangedEventArgs> ProgressChanged;
 
         #endregion
 
@@ -55,12 +71,14 @@ namespace FileExplorer.CustomCollections
             }
             _provider = provider;
             _synchronizationContext = new DispatcherSynchronizationContext(Application.Current.Dispatcher);
-            timer = new Timer(LongLoadingTime.TotalMilliseconds);
+            timer = new Timer(_longLoadingTime.TotalMilliseconds);
             timer.Elapsed += Timer_Elapsed;
+
+            _progress.ProgressChanged += _progress_ProgressChanged;
         }
 
         #endregion
-       
+
         #region public methods
 
         public override void AddRange(IEnumerable<T> range)
@@ -156,7 +174,7 @@ namespace FileExplorer.CustomCollections
             {
                 try
                 {
-                    _collection = _provider.GetItems();
+                    _collection = _provider.GetItems(_progress);
                     _synchronizationContext.Send(LoadCompleted, _collection.Count);
                 }
                 catch (Exception ex)
@@ -213,6 +231,20 @@ namespace FileExplorer.CustomCollections
         {
             IsLongLoading = true;
             timer.Stop();
+        }
+
+        private void OnProgressChanged()
+        {
+            ProgressChanged?.Invoke(this, new ProgressChangedEventArgs(ProgressLoading,0));
+        }
+
+        private void _progress_ProgressChanged(object sender, int e)
+        {
+            _synchronizationContext.Send(state =>
+            {
+                ProgressLoading = e;
+
+            }, 0);
         }
 
         #endregion

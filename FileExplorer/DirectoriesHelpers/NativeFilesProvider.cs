@@ -16,16 +16,19 @@ namespace FileExplorer.DirectoriesHelpers
             _directoryInfo = directoryInfo;
         }
 
-        public ObservableCollection<ISystemObjectViewModel> GetItems()
+        public ObservableCollection<ISystemObjectViewModel> GetItems(IProgress<int> progress)
         {
             ObservableCollection<ISystemObjectViewModel> collection = new ObservableCollection<ISystemObjectViewModel>();
             DirectoryInfo fileInfo = new DirectoryInfo(_directoryInfo.Path);
             var files = fileInfo.GetFiles();
-            foreach (var file in files)
+            int length = files.Length;
+            for (int index = 0; index < length; index++)
             {
+                var file = files[index];
                 try
                 {
                     collection.Add(new FileViewModel(file));
+                    progress.Report(index / (length * 100));
                 }
                 catch (Exception ex)
                 {

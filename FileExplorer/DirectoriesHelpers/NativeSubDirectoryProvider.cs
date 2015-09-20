@@ -17,12 +17,15 @@ namespace FileExplorer.DirectoriesHelpers
             Parent = parent;
         }
 
-        public ObservableCollection<IDirectoryViewModel> GetItems()
+        public ObservableCollection<IDirectoryViewModel> GetItems(IProgress<int> progress)
         {
             ObservableCollection<IDirectoryViewModel> _collection = new ObservableCollection<IDirectoryViewModel>();
             var directories2 = _directoryInfo.GetDirectories();
-            foreach (var info in directories2)
+            int length = directories2.Count;
+            for (int index = 0; index < length; index++)
             {
+              
+                var info = directories2[index];
                 try
                 {
                     _collection.Add(new RootDirectoryViewModel(info, Parent));
@@ -31,6 +34,7 @@ namespace FileExplorer.DirectoriesHelpers
                 {
                     Debug.WriteLine(ex);
                 }
+                progress.Report(index / (length * 100));
             }
             return _collection;
         }
