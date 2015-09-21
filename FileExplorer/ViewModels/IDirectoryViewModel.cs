@@ -13,5 +13,7 @@ namespace FileExplorer.ViewModels
         AsyncLoadCollection<IDirectoryViewModel> SubDirectories { get; }
         UnionCollectionEx<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel> Children { get; }
         IDirectoryViewModel Parent { get; }
+        void LoadAll();
+        void UpdateHasItems();
     }
 }

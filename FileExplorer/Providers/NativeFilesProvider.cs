@@ -19,6 +19,7 @@ namespace FileExplorer.Providers
 
         public override ObservableCollection<ISystemObjectViewModel> GetItems(IProgress<int> progress, CancellationToken token)
         {
+            if(_directoryInfo==null) return new ObservableCollection<ISystemObjectViewModel>();
             ObservableCollection<ISystemObjectViewModel> collection = new ObservableCollection<ISystemObjectViewModel>();
             DirectoryInfo fileInfo = new DirectoryInfo(_directoryInfo.Path);
             var files = fileInfo.GetFiles();

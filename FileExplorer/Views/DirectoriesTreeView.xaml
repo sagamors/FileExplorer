@@ -14,8 +14,7 @@
                   ScrollViewer.IsDeferredScrollingEnabled="True"
                   VirtualizingStackPanel.IsVirtualizing="True"
                   VirtualizingStackPanel.VirtualizationMode="Standard"
-                  attached:TreeViewExtensionAttached.Selected="{Binding SelectedDirectory,
-                                                                        Mode=TwoWay}">
+                  attached:TreeViewExtensionAttached.Selected="{Binding Top.SelectedDirectory, Mode=TwoWay}">
             <TreeView.ItemContainerStyle>
                 <Style BasedOn="{StaticResource TreeViewItemStyle}" TargetType="TreeViewItem">
                     <Setter Property="HeaderTemplate" Value="{StaticResource SystemObjectDataTemplate}" />

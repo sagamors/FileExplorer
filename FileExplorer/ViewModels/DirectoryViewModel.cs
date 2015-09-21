@@ -29,7 +29,7 @@ namespace FileExplorer.ViewModels
             HasItems = directoryInfo.EnumerateDirectories().Any();
             Files = new AsyncLoadCollection<ISystemObjectViewModel>(new FilesProvider(directoryInfo));
             SubDirectories = new AsyncLoadCollection<IDirectoryViewModel>(directoryProvider);
-            Children =new UnionCollectionEx<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel>(
+            Children = new UnionCollectionEx<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel>(
                     SubDirectories, Files);
         }
 

@@ -19,8 +19,11 @@ namespace FileExplorer.ViewModels
 
         private List<string> history = new List<string>();
         private IMessageBoxService MessageBoxService = new MessageBoxService();
-        private int _positionHistory = 0;
+        private int _positionHistory = -1;
         private Dispatcher _dispatcher;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private bool _currentPathBroken;
+        private bool _fromHistory;
         #endregion
 
         #region public properties
@@ -34,9 +37,33 @@ namespace FileExplorer.ViewModels
         }
 
         public ICommand NewPathSetCommand { get; }
-        public event EventHandler<NewPathSetArgs> CurrentPathSet;
+        public event EventHandler<SelectDirectoryArgs> SelectDirectory;
         public ICommand BackwardCommand { get; }
         public ICommand ForwardCommand { get; }
+
+        private IDirectoryViewModel _selectedDirectory;
+        public IDirectoryViewModel SelectedDirectory
+        {
+            set
+            {
+                _selectedDirectory = value;
+                if (_selectedDirectory.VisualPath != CurrentPath || _selectedDirectory.Path != CurrentPath)
+                {
+                    CurrentPath = SelectedDirectory.VisualPath;
+                }
+                if (!_fromHistory)
+                {
+                    AddToHistory(CurrentPath);
+                }
+
+                _currentPathBroken = false;
+                _fromHistory = false;
+                OnSelectedDirectoryChanged(value);
+            }
+            get { return _selectedDirectory; }
+        }
+
+        public event EventHandler<TopViewModel.SelectedDirectoryChangedArgs> SelectedDirectoryChanged;
 
         #endregion
 
@@ -64,15 +91,13 @@ namespace FileExplorer.ViewModels
         public void BackwardNavigation()
         {
             _positionHistory--;
-            CurrentPath = history[_positionHistory];
-            OnCurrentPathSetOutClear();
+            GoToPath(history[_positionHistory]);
         }
 
         public void ForwardNavigation()
         {
             _positionHistory++;
-            CurrentPath = history[_positionHistory];
-            OnCurrentPathSetOutClear();
+            GoToPath(history[_positionHistory]);
         }
 
         #endregion
@@ -85,7 +110,7 @@ namespace FileExplorer.ViewModels
             OnPropertyChanged("CurrentPath");
         }
 
-        private void Clear()
+        private void ClearAfterPosition()
         {
             history.RemoveRange(_positionHistory + 1, history.Count - _positionHistory - 1);
             _positionHistory = history.Count;
@@ -99,7 +124,11 @@ namespace FileExplorer.ViewModels
                 {
                     if (_positionHistory != history.Count - 1 && history.Count != 0)
                     {
-                        Clear();
+                        ClearAfterPosition();
+                    }
+                    if (history.Count > 1 && (history[history.Count-1] == path))
+                    {
+                        return;
                     }
                     history.Add(path);
                     _positionHistory = history.Count - 1;
@@ -120,7 +149,7 @@ namespace FileExplorer.ViewModels
                     {
                         child.Wait();
                     }
-                    catch (AggregateException ex)
+                    catch (AggregateException)
                     {
                         return;
                     }
@@ -132,9 +161,9 @@ namespace FileExplorer.ViewModels
 
                     if (child.IsFaulted)
                         throw child.Exception;
-
-                    child.Result.IsSelected = true;
-                    CurrentPathSet?.Invoke(this, new NewPathSetArgs(CurrentPath));
+                    if (SelectedDirectory.VisualPath == child.Result.VisualPath ) return;
+                    SelectedDirectory = child.Result;
+                    SelectedDirectory.LoadAll();
                     AddToHistory(CurrentPath);
                 }
                 catch (Exception exception)
@@ -143,9 +172,55 @@ namespace FileExplorer.ViewModels
                 }
 
             }, _cancellationTokenSource.Token);
+        }
 
-            //SetWithOutSave(CurrentPath);
-/*            OnCurrentPath();*/
+        private void GoToPath(string path)
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    var child = PathHelper.GetAndLoadDirectory(path, _cancellationTokenSource.Token);
+                    try
+                    {
+                        child.Wait();
+                    }
+                    catch (AggregateException)
+                    {
+                        //todo
+                        return;
+                    }
+
+                    if (child.IsCanceled)
+                    {
+                        return;
+                    }
+
+                    if (child.IsFaulted)
+                        throw child.Exception;
+
+                    if (CurrentPath == child.Result.VisualPath) return;
+                    if (CurrentPath == child.Result.Path)
+                    {
+                        CurrentPath = child.Result.VisualPath;
+                        return;
+                    }
+                    _fromHistory = true;
+                    SelectedDirectory = child.Result;
+                    SelectedDirectory.LoadAll();
+                }
+                catch (Exception exception)
+                {
+                    if (!_currentPathBroken)
+                    {
+                        _currentPathBroken = true;
+                        _positionHistory--;
+                        ClearAfterPosition();
+                    }
+                    MessageBoxService.ShowError(exception.Message);
+                }
+
+            }, _cancellationTokenSource.Token);
         }
 
         private void OnCurrentPathSetOutClear()
@@ -156,16 +231,33 @@ namespace FileExplorer.ViewModels
             }
             catch (Exception exception)
             {
-                _positionHistory--;
-                Clear();
+
                 MessageBoxService.ShowError(exception.Message);
             }*/
         }
 
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private void OnCurrentPathAsync()
+        private void OnSelectedDirectoryChanged(IDirectoryViewModel directoryViewModel)
         {
+            SelectedDirectoryChanged?.Invoke(this, new SelectedDirectoryChangedArgs(directoryViewModel));
+        }
 
+        #endregion
+
+/*        protected virtual void OnSelectDirectory(IDirectoryViewModel directoryViewModel)
+        {
+            SelectDirectory?.Invoke(this, new SelectDirectoryArgs(directoryViewModel));
+        }*/
+
+        #region public types
+
+        public class SelectedDirectoryChangedArgs : EventArgs
+        {
+            public IDirectoryViewModel NewDirectoryViewModel { get; }
+
+            public SelectedDirectoryChangedArgs(IDirectoryViewModel newDirectoryViewModel)
+            {
+                NewDirectoryViewModel = newDirectoryViewModel;
+            }
         }
 
         #endregion
@@ -179,5 +271,14 @@ namespace FileExplorer.ViewModels
         {
             Path = path;
         }
+    }
+
+    public class SelectDirectoryArgs
+    {
+        public IDirectoryViewModel SelecteDirectoryViewModel { get; }
+        public SelectDirectoryArgs(IDirectoryViewModel selecteDirectoryViewModel)
+        {
+            SelecteDirectoryViewModel = selecteDirectoryViewModel;
+        }         
     }
 }

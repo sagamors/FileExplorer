@@ -12,7 +12,8 @@
         Width="1200"
         Height="800"
         WindowStartupLocation="CenterScreen"
-        mc:Ignorable="d">
+        mc:Ignorable="d"
+        >
     <Window.DataContext>
         <viewModels:MainViewModel />
     </Window.DataContext>
@@ -54,15 +55,14 @@
                 </ItemsPanelTemplate>
             </StatusBar.ItemsPanel>
             <StatusBarItem>
-                <TextBlock Text="{Binding SelectedDirectory.Children.Count, StringFormat='Number of elements : {0}', UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Text="{Binding Top.SelectedDirectory.Children.Count, StringFormat='Number of elements : {0}', UpdateSourceTrigger=PropertyChanged}" />
             </StatusBarItem>
             <StatusBarItem Grid.Column="2">
                 <ProgressBar Width="150"
                              Height="16"
-                             Visibility="{Binding SelectedDirectory.Children.IsLoading,
+                             Visibility="{Binding Top.SelectedDirectory.Children.IsLoading,
                                                   Converter={StaticResource BoolToVisibilityConverter}}"
-                             Value="{Binding SelectedDirectory.Children.Progress,
-                                             Mode=OneWay}" />
+                             Value="{Binding Top.SelectedDirectory.Children.Progress, Mode=OneWay}" />
             </StatusBarItem>
         </StatusBar>
 

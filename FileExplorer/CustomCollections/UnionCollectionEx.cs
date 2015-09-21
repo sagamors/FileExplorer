@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace FileExplorer.CustomCollections
 {
@@ -38,6 +39,7 @@ namespace FileExplorer.CustomCollections
             int firstProgress = (_first.ProgressLoading * _first.PreLoadedCount) / 100;
             int secondProgress = (_second.ProgressLoading * _second.PreLoadedCount) / 100;
             Progress = (int) (((firstProgress + secondProgress) * 100.0) / totalSize);
+            Debug.WriteLine(Progress);
         }
 
         private void CollectionLoaded(object sender, EventArgs e)

@@ -84,5 +84,10 @@ namespace FileExplorer.CustomCollections
         {
             CollectionChanged?.Invoke(sender, e);
         }
+
+        protected void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        {
+            CollectionChanged?.Invoke(this, e);
+        }
     }
 }

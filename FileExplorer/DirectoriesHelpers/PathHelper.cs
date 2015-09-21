@@ -26,19 +26,18 @@ namespace FileExplorer.DirectoriesHelpers
 
                 //check first 
                 string trimedPath = Trim(path);
-                if (Trim(_root.VisualPath) == trimedPath) return _root;
 
-                do
+                while (Trim(child.VisualPath) != trimedPath)
                 {
+                    if (!child.SubDirectories.IsLoaded)
+                    {
+                        child.SubDirectories.LoadAsync(token).Wait(token);
+                    }
                     findedParent = child;
                     child = findedParent.SubDirectories.FirstOrDefault(model => Contains(trimedPath, Trim(model.VisualPath)));
                     if (child == null) break;
-                    if (!findedParent.SubDirectories.IsLoaded)
-                    {
-                        findedParent.SubDirectories.LoadAsync(token).Wait(token);
-                    }
-                    child.IsExpanded = true;
-                } while (Trim(child.VisualPath) != trimedPath);
+        /*            child.IsExpanded = true;*/
+                }
 
                 if (child != null) return child;
 
@@ -57,23 +56,41 @@ namespace FileExplorer.DirectoriesHelpers
                     }
                     findedParent = child;
                     child = findedParent.SubDirectories.First(model => Contains(NormalizePath(path), NormalizePath(model.Path)));
-                    child.IsExpanded = true;
+                /*    child.IsExpanded = true;*/
                 }
                 return child;
             }, token);
         }
 
-        public IDirectoryViewModel GetDirectory(string path)
+        public IDirectoryViewModel GetDirectory(string path, out IDirectoryViewModel parent)
         {
             IDirectoryViewModel child = null;
             IDirectoryViewModel findedParent = null;
             findedParent = _root;
             child = findedParent;
+            parent = null;
             do
             {
                 findedParent = child;
-                child = findedParent.SubDirectories.First(model => Contains(NormalizePath(path), NormalizePath(model.Path)));
-                child.IsExpanded = true;
+                if (child == null)
+                {
+                    
+                }
+
+
+                child = findedParent.SubDirectories.FirstOrDefault(model => Contains(NormalizePath(path), NormalizePath(model.Path)));
+                if (child == null)
+                {
+//                    if (!findedParent.SubDirectories.IsLoaded)
+//                    {
+                        if (NormalizePath(findedParent.Path) == NormalizePath(Directory.GetParent(path).FullName))
+                        {
+                            parent = findedParent;
+                            
+                        }
+//                    }
+                    return null;
+                }
             } while (NormalizePath(child.Path) != NormalizePath(path));
             return child;
         }
@@ -94,6 +111,7 @@ namespace FileExplorer.DirectoriesHelpers
         {
             var splitSource = source.Split(Path.DirectorySeparatorChar);
             var splitPath = path.Split(Path.DirectorySeparatorChar);
+            if (splitSource.Length < splitPath.Length) return false;
             for (int i = 0; i < splitPath.Length; i++)
             {
                 if (splitSource[i] != splitPath[i])

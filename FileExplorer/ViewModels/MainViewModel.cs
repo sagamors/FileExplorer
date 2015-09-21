@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
-using System.Threading;
+using System.Linq;
 using System.Windows.Threading;
 using FileExplorer.DirectoriesHelpers;
 using FileExplorer.Helpers;
@@ -23,36 +24,7 @@ namespace FileExplorer.ViewModels
         public string Title { get; } = "FileExplorer";
         public TopViewModel Top { set; get; }
 
-        public ObservableCollectionEx<IDirectoryViewModel> Items { set; get; } =
-            new ObservableCollectionEx<IDirectoryViewModel>();
-
-        private IDirectoryViewModel _selectedDirectory;
-
-        public IDirectoryViewModel SelectedDirectory
-        {
-            set
-            {
-                _selectedDirectory = value;
-                OnSelectedDirectoryChanged(value);
-            }
-            get { return _selectedDirectory; }
-        }
-
-        public event EventHandler<SelectedDirectoryChangedArgs> SelectedDirectoryChanged;
-
-        #endregion
-
-        #region public types
-
-        public class SelectedDirectoryChangedArgs : EventArgs
-        {
-            public IDirectoryViewModel NewDirectoryViewModel { get; }
-
-            public SelectedDirectoryChangedArgs(IDirectoryViewModel newDirectoryViewModel)
-            {
-                NewDirectoryViewModel = newDirectoryViewModel;
-            }
-        }
+        public ObservableCollectionEx<IDirectoryViewModel> Items { set; get; } = new ObservableCollectionEx<IDirectoryViewModel>();
 
         #endregion
 
@@ -61,14 +33,13 @@ namespace FileExplorer.ViewModels
         public MainViewModel()
         {
             _dispatcher = Dispatcher.CurrentDispatcher;
-         
-            SelectedDirectoryChanged += MainViewModel_SelectedDirectoryChanged;
             var root = new RootDirectoryViewModel();
             Items.Add(root);
             _pathHelper = new PathHelper(root);
             Top = new TopViewModel(_pathHelper);
-            SelectedDirectory = root;
-    
+            Top.SelectedDirectory = root;
+            DirectoryViewModelBase.OpenDirectory += DirectoryViewModelBase_OpenDirectory;
+
             foreach (var drive in DriveInfo.GetDrives())
             {
                 if (!drive.IsReady) return;
@@ -76,7 +47,7 @@ namespace FileExplorer.ViewModels
                 directoryFileSystemWatcher.Path = drive.Name;
                 /* Watch for changes in LastAccess and LastWrite times, and
                    the renaming of files or directories. */
-                directoryFileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+                directoryFileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Size;
                 // Add event handlers.
                 directoryFileSystemWatcher.Changed += OnChanged;
                 directoryFileSystemWatcher.Created += OnChanged;
@@ -88,50 +59,37 @@ namespace FileExplorer.ViewModels
             }
         }
 
+        private void DirectoryViewModelBase_OpenDirectory(object sender, DirectoryViewModelBase.OpenDirectoryArgs e)
+        {
+            Top.SelectedDirectory = e.Directory;
+        }
+
         #endregion
 
         #region private methods
 
-        private void MainViewModel_SelectedDirectoryChanged(object sender, SelectedDirectoryChangedArgs e)
-        {
-            string path = e.NewDirectoryViewModel.VisualPath;
-            if (Top.CurrentPath == path) return;
-            Top.SetCurrentPath(path);
-        }
-
-        private void OnSelectedDirectoryChanged(IDirectoryViewModel directoryViewModel)
-        {
-            SelectedDirectoryChanged?.Invoke(this, new SelectedDirectoryChangedArgs(directoryViewModel));
-        }
-
         // Define the event handlers.
         private void OnChanged(object source, FileSystemEventArgs e)
         {
-            IDirectoryViewModel child;
+            IDirectoryViewModel parent;
+            IDirectoryViewModel child = _pathHelper.GetDirectory(e.FullPath, out parent);
+            bool isFile;
+            int index = -1;
+            isFile = Path.HasExtension(e.FullPath);
+
             _dispatcher.Invoke(() =>
             {
                 switch (e.ChangeType)
                 {
                     case WatcherChangeTypes.Created:
-
+                        Create(isFile, parent, e.FullPath);
                         break;
                     case WatcherChangeTypes.Changed:
-                        bool isFile = File.Exists(e.FullPath);
-                        child = _pathHelper.GetDirectory(e.FullPath);
-                        int index = -1;
                         if (isFile)
                         {
-                            for (int i = 0; i < child.Files.Count; i++)
-                            {
-                                var file = child.Files[i];
-                                if (file.Path == e.FullPath)
-                                {
-                                    index = i;
-                                    break;
-                                }
-                            }
+                            index= FindOf(parent, e.FullPath);
                             if (index == -1) return;
-                            child.Files[index] = new FileViewModel(new FileInfo(e.FullPath));
+                            parent.Files[index] = new FileViewModel(new FileInfo(e.FullPath));
                         }
                         else
                         {
@@ -144,20 +102,127 @@ namespace FileExplorer.ViewModels
                         break;
 
                     case WatcherChangeTypes.Deleted:
-                        child = _pathHelper.GetDirectory(e.FullPath);
-                        child.Parent.SubDirectories.Remove(child);
+                        Delete(isFile, parent, child, e.FullPath);
                         break;
                 }
             });
         }
 
-        private static void OnRenamed(object source, RenamedEventArgs e)
+        private int FindOf(IDirectoryViewModel directoryViewModel,string path)
         {
-            // Specify what is done when a file is renamed.
-            Console.WriteLine("File: {0} renamed to {1}", e.OldFullPath, e.FullPath);
+            for (int i = 0; i < directoryViewModel.Files.Count; i++)
+            {
+                var file = directoryViewModel.Files[i];
+                if (file.Path == path)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        private void OnRenamed(object source, RenamedEventArgs e)
+        {
+            IDirectoryViewModel parent;
+            IDirectoryViewModel child = _pathHelper.GetDirectory(e.FullPath, out parent);
+            bool isFile;
+            int index = -1;
+            isFile = Path.HasExtension(e.FullPath);
+            if (isFile)
+            {
+                if(!parent.Files.IsLoaded)  return;
+
+            }
+            else
+            {
+                if (!parent.SubDirectories.IsLoaded)
+                {
+                    parent.UpdateHasItems();
+                    return;
+                }
+            }
+            _dispatcher.Invoke(() =>
+            {
+                Delete(isFile, parent, child, e.OldFullPath);
+                Create(isFile, parent, e.FullPath);
+            });
+        }
+
+        private void Create(bool isFile,IDirectoryViewModel parent, string path)
+        {
+            int index  = 0;
+            if (isFile)
+            {
+                if (parent == null) return;
+                if (!parent.Files.IsLoaded) return;
+                string name = Path.GetFileName(path);
+                for (int i = 0; i < parent.Files.Count; i++)
+                {
+                    var file = parent.Files[i];
+                    if (string.Compare(name, file.DisplayName, StringComparison.OrdinalIgnoreCase) < 0)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+                parent.Files.Insert(index, new FileViewModel(new FileInfo(path)));
+            }
+            else
+            {
+                if (parent != null)
+                {
+                    if (parent.SubDirectories.IsLoaded)
+                    {
+                        string name = Path.GetDirectoryName(path);
+                        for (int i = 0; i < parent.SubDirectories.Count; i++)
+                        {
+                            var directory = parent.SubDirectories[i];
+                            if (String.Compare(name, directory.DisplayName, StringComparison.OrdinalIgnoreCase) < 0)
+                            {
+                                index = i;
+                                break;
+                            }
+                        }
+                        parent.SubDirectories.Insert(index, new DirectoryViewModel(new DirectoryInfo(path), parent));
+                    }
+                    else
+                    {
+                        parent.UpdateHasItems();
+                    }
+                    return;
+                }
+            }
+        }
+
+        private void Delete(bool isFile, IDirectoryViewModel parent, IDirectoryViewModel child, string path)
+        {
+            int index;
+            if (isFile)
+            {
+                if (parent != null)
+                {
+                    if (parent.Files.IsLoaded)
+                    {
+                        index = FindOf(parent, path);
+                        parent.Files.Remove(parent.Files[index]);
+                    }
+                }
+            }
+            else
+            {
+                if (child == null)
+                {
+                    if (parent != null)
+                    {
+                        parent.UpdateHasItems();
+                        return;
+                    }
+                    return;
+                }
+                child.Parent.SubDirectories.Remove(child);
+            }
         }
 
         #endregion
-
     }
 }

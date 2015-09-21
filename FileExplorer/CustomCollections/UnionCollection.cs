@@ -31,11 +31,7 @@ namespace FileExplorer.CustomCollections
             get { return _second; }
         }
 
-        public override int Count
-        {
-            get { return _first.Count + _second.Count; }
-
-        }
+        public override int Count { protected set; get; }
 
         #endregion
 
@@ -230,13 +226,13 @@ namespace FileExplorer.CustomCollections
 
         private void SecondOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-
             OnSourceCollectionChanged(e, Second.Count);
         }
 
         private void First_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            OnCollectionChanged(this, e);
+            OnSourceCollectionChanged(e, 0);
+           
         }
 
         private void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
@@ -249,20 +245,28 @@ namespace FileExplorer.CustomCollections
 
             switch (e.Action)
             {
-                    case NotifyCollectionChangedAction.Add:
-                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, e.NewItems, e.NewStartingIndex + offset));
+                case NotifyCollectionChangedAction.Add:
+                    Count = First.Count + Second.Count;
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, e.NewItems,
+                        e.NewStartingIndex + offset));
                     break;
                 case NotifyCollectionChangedAction.Move:
-                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, e.NewItems, e.NewStartingIndex + offset, e.OldStartingIndex+ offset));
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, e.NewItems,
+                        e.NewStartingIndex + offset, e.OldStartingIndex + offset));
                     break;
                 case NotifyCollectionChangedAction.Remove:
-                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, e.NewItems, e.NewStartingIndex + offset));
+                    Count = First.Count + Second.Count;
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, e.NewItems,
+                        e.NewStartingIndex + offset));
+           
                     break;
                 case NotifyCollectionChangedAction.Replace:
-                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action,e.NewItems,e.NewStartingIndex + offset));
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(e.Action, e.NewItems,
+                        e.OldItems));
                     break;
                 case NotifyCollectionChangedAction.Reset:
-                         OnCollectionChanged(e);
+                    Count = First.Count + Second.Count;
+                    OnCollectionChanged(e);
                     break;
             }
         }

@@ -26,7 +26,7 @@ namespace FileExplorer.CustomCollections
         private SynchronizationContext _synchronizationContext;
         private Timer timer;
         private Progress<int> _progress = new Progress<int>();
-
+        private string CountString = "Count";
         #endregion
 
         #region public properties
@@ -113,6 +113,7 @@ namespace FileExplorer.CustomCollections
         public override void Clear()
         {
             _collection.Clear();
+            FireCollectionClear();
         }
 
         public override int IndexOf(object value)
@@ -120,24 +121,27 @@ namespace FileExplorer.CustomCollections
             return _collection.IndexOf((T) value);
         }
 
-        public override void Insert(int index, object value)
+        public override void Insert(int index, object item)
         {
-            throw new NotSupportedException();
+            Insert(index, (T) item);
         }
 
         public override void Remove(object value)
         {
-            throw new NotSupportedException();
+            Remove((T) value);
         }
 
         public override void Insert(int index, T item)
         {
-            throw new NotSupportedException();
+            _collection.Insert(index, item);
+            Count = _collection.Count;
+            FireCollectionReset();
+           // OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
         }
 
         public override void RemoveAt(int index)
         {
-            throw new NotSupportedException();
+            Remove(_collection[index]);
         }
 
         public override bool Contains(T item)
@@ -209,7 +213,7 @@ namespace FileExplorer.CustomCollections
             {
                 T originalItem = this[index];
                 _collection[index] = value;
-                OnCollectionChanged(this,new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, value, originalItem,index));
+                OnCollectionChanged(this,new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, new List<T>() { value}, new List<T>() { originalItem }));
             }
         }
 
@@ -244,6 +248,20 @@ namespace FileExplorer.CustomCollections
             OnCollectionChanged(this, e);
         }
 
+        /// <summary>
+        /// Fires the collection reset event.
+        /// </summary>
+        private void FireCollectionClear()
+        {
+            IsLoaded = false;
+            IsLoading = false;
+            IsLongLoading = false;
+            Count = 0;
+            NotifyCollectionChangedEventArgs e =
+                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
+            OnCollectionChanged(this, e);
+        }
+
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             IsLongLoading = true;
@@ -253,6 +271,11 @@ namespace FileExplorer.CustomCollections
         private void OnProgressChanged()
         {
             ProgressChanged?.Invoke(this, new ProgressChangedEventArgs(ProgressLoading,0));
+        }
+
+        private void OnCountChanged()
+        {
+            OnPropertyChanged(CountString);
         }
 
         private void _progress_ProgressChanged(object sender, int e)

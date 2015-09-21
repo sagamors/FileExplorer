@@ -9,6 +9,17 @@ namespace FileExplorer.ViewModels
 {
     public class DirectoryViewModelBase : ViewModelBase, IDirectoryViewModel
     {
+        public static event EventHandler<OpenDirectoryArgs> OpenDirectory; 
+
+        public class OpenDirectoryArgs
+        {
+            public IDirectoryViewModel Directory { get; }
+            public OpenDirectoryArgs(IDirectoryViewModel directory)
+            {
+                Directory = directory;
+            }
+        }
+
         #region private fields
 
         protected INativeSystemInfo _nativeSystemInfo;
@@ -50,12 +61,8 @@ namespace FileExplorer.ViewModels
             set
             {
                 _isSelected = value;
-                if (!SubDirectories.IsLoaded && !SubDirectories.IsLoading && _isSelected)
-                    SubDirectories.LoadAsync();
-                if (!Files.IsLoaded && !Files.IsLoading && _isSelected)
-                {
-                    Files.LoadAsync();
-                }
+                if(_isSelected)
+                    LoadAll();
             }
         }
 
@@ -88,11 +95,31 @@ namespace FileExplorer.ViewModels
 
         public void Open()
         {
-            if (Parent != null)
-                Parent.IsExpanded = true;
-            IsSelected = true;
+            LoadAll();
+            OnOpenDirectory(this);
+        }
+
+        public void LoadAll()
+        {
+            if (!SubDirectories.IsLoaded && !SubDirectories.IsLoading)
+                SubDirectories.LoadAsync();
+            if (!Files.IsLoaded && !Files.IsLoading)
+            {
+                Files.LoadAsync();
+            }
+        }
+
+        public virtual void UpdateHasItems()
+        {
+            if(SubDirectories.IsLoaded)
+                HasItems = SubDirectories.HasItems;
         }
 
         #endregion
+
+        private static void OnOpenDirectory(IDirectoryViewModel e)
+        {
+            OpenDirectory?.Invoke(null, new OpenDirectoryArgs(e));
+        }
     }
 }

@@ -8,7 +8,7 @@
              d:DesignWidth="300"
              mc:Ignorable="d">
     <ListView ItemContainerStyle="{StaticResource ListViewItemStyle}"
-              ItemsSource="{Binding SelectedDirectory.Children}"
+              ItemsSource="{Binding Top.SelectedDirectory.Children}"
               ScrollViewer.IsDeferredScrollingEnabled="True"
               VirtualizingStackPanel.IsVirtualizing="True" 
               >
