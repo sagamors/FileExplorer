@@ -6,7 +6,7 @@ using FileExplorer.Helpers;
 
 namespace FileExplorer.DirectoriesHelpers
 {
-    public class NativeFileInfo
+    public class NativeFileInfo : INativeSystemInfo
     {
         #region private properties
 

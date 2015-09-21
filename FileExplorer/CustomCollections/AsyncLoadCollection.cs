@@ -21,6 +21,7 @@ namespace FileExplorer.CustomCollections
 
         private readonly TimeSpan _longLoadingTime = new TimeSpan(0, 0, 0, 1);
         private readonly IItemsProvider<T> _provider;
+        //todo переподписаться на события
         private ObservableCollection<T> _collection = new ObservableCollection<T>();
         private SynchronizationContext _synchronizationContext;
         private Timer timer;
@@ -34,7 +35,7 @@ namespace FileExplorer.CustomCollections
         public bool IsLongLoading { private set; get; }
         public bool IsLoaded { get; set; }
         public bool HasItems { get; private set; }
-
+        public int PreLoadedCount { get; private set; }
         private int _count = 0;
         private int _progressLoading;
 
@@ -58,6 +59,7 @@ namespace FileExplorer.CustomCollections
         }
 
         public event EventHandler<ProgressChangedEventArgs> ProgressChanged;
+        public event EventHandler<EventArgs> CollectionLoaded;
 
         #endregion
 
@@ -75,6 +77,18 @@ namespace FileExplorer.CustomCollections
             timer.Elapsed += Timer_Elapsed;
 
             _progress.ProgressChanged += _progress_ProgressChanged;
+            provider.CountLoaded += Provider_CountLoaded;
+        }
+
+        private void Provider_CountLoaded(object sender, CountLoadedEventArgs e)
+        {
+           _synchronizationContext.Send(state =>
+           {
+               PreLoadedCount = e.Count;
+               HasItems = PreLoadedCount > 0;
+              OnPropertyChanged("PreLoadedCount");
+           },null);
+
         }
 
         #endregion
@@ -162,7 +176,6 @@ namespace FileExplorer.CustomCollections
             return _collection.IndexOf(item);
         }
 
-
         public Task LoadAsync()
         {
             timer.Start();
@@ -191,9 +204,7 @@ namespace FileExplorer.CustomCollections
             {
                 T originalItem = this[index];
                 _collection[index] = value;
-                OnCollectionChanged(this,
-                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, value, originalItem,
-                        index));
+                OnCollectionChanged(this,new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, value, originalItem,index));
             }
         }
 
@@ -215,6 +226,7 @@ namespace FileExplorer.CustomCollections
             IsLoaded = true;
             timer.Stop();
             IsLongLoading = false;
+            OnCollectionLoaded();
         }
 
         /// <summary>
@@ -243,12 +255,15 @@ namespace FileExplorer.CustomCollections
             _synchronizationContext.Send(state =>
             {
                 ProgressLoading = e;
-
             }, 0);
         }
 
         #endregion
 
+        protected virtual void OnCollectionLoaded()
+        {
+            CollectionLoaded?.Invoke(this, EventArgs.Empty);
+        }
     }
 }
 

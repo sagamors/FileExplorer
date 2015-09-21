@@ -2,29 +2,31 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using FileExplorer.CustomCollections;
+using FileExplorer.DirectoriesHelpers;
 using FileExplorer.ViewModels;
 
-namespace FileExplorer.DirectoriesHelpers
+namespace FileExplorer.Providers
 {
-    class NativeSubDirectoryProvider : IItemsProvider<IDirectoryViewModel>
+    class NativeSubDirectoryProvider : ItemsProviderBase<IDirectoryViewModel>
     {
-        private readonly NativeDirectoryInfo _directoryInfo;
+        private readonly NativeDirectoryInfo _systemInfo;
         public IDirectoryViewModel Parent { get; }
 
-        public NativeSubDirectoryProvider(NativeDirectoryInfo directoryInfo, IDirectoryViewModel parent)
+        public NativeSubDirectoryProvider(NativeDirectoryInfo systemInfo, IDirectoryViewModel parent)
         {
-            _directoryInfo = directoryInfo;
+            _systemInfo = systemInfo;
             Parent = parent;
         }
 
-        public ObservableCollection<IDirectoryViewModel> GetItems(IProgress<int> progress)
+        public override ObservableCollection<IDirectoryViewModel> GetItems(IProgress<int> progress)
         {
             ObservableCollection<IDirectoryViewModel> _collection = new ObservableCollection<IDirectoryViewModel>();
-            var directories2 = _directoryInfo.GetDirectories();
+            var directories2 = _systemInfo.GetDirectories();
             int length = directories2.Count;
+            OnCountLoaded(length);
+            double delta = 100.0 / length;
             for (int index = 0; index < length; index++)
             {
-              
                 var info = directories2[index];
                 try
                 {
@@ -34,7 +36,7 @@ namespace FileExplorer.DirectoriesHelpers
                 {
                     Debug.WriteLine(ex);
                 }
-                progress.Report(index / (length * 100));
+                progress.Report((int)(index * delta));
             }
             return _collection;
         }

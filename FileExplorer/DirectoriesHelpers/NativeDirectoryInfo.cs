@@ -9,7 +9,7 @@ using FileExplorer.Helpers;
 
 namespace FileExplorer.DirectoriesHelpers
 {
-    internal class NativeDirectoryInfo
+    internal class NativeDirectoryInfo : INativeSystemInfo
     {
         #region private fields
 

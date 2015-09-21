@@ -72,6 +72,14 @@ namespace FileExplorer.CustomCollections
             PropertyChanged?.Invoke(this, e);
         }
 
+        /// <summary> 
+        /// Raises a PropertyChanged event (per <see cref="INotifyPropertyChanged">). 
+        /// </see></summary>
+        protected virtual void OnPropertyChanged([CallerMemberName] string name = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
         protected void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             CollectionChanged?.Invoke(sender, e);

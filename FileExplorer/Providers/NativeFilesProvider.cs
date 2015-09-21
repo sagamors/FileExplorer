@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Windows.Media;
 using FileExplorer.CustomCollections;
+using FileExplorer.DirectoriesHelpers;
 using FileExplorer.ViewModels;
 
-namespace FileExplorer.DirectoriesHelpers
+namespace FileExplorer.Providers
 {
-    class NativeFilesProvider : IItemsProvider<ISystemObjectViewModel>
+    class NativeFilesProvider : ItemsProviderBase<ISystemObjectViewModel>
     {
         private readonly NativeDirectoryInfo _directoryInfo;
 
@@ -16,11 +16,12 @@ namespace FileExplorer.DirectoriesHelpers
             _directoryInfo = directoryInfo;
         }
 
-        public ObservableCollection<ISystemObjectViewModel> GetItems(IProgress<int> progress)
+        public override ObservableCollection<ISystemObjectViewModel> GetItems(IProgress<int> progress)
         {
             ObservableCollection<ISystemObjectViewModel> collection = new ObservableCollection<ISystemObjectViewModel>();
             DirectoryInfo fileInfo = new DirectoryInfo(_directoryInfo.Path);
             var files = fileInfo.GetFiles();
+            OnCountLoaded(files.Length);
             int length = files.Length;
             for (int index = 0; index < length; index++)
             {
@@ -28,7 +29,7 @@ namespace FileExplorer.DirectoriesHelpers
                 try
                 {
                     collection.Add(new FileViewModel(file));
-                    progress.Report(index / (length * 100));
+                    progress.Report((int)((index * 1.0 / length) * 100));
                 }
                 catch (Exception ex)
                 {

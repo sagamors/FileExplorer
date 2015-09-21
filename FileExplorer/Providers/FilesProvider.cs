@@ -4,26 +4,29 @@ using System.IO;
 using FileExplorer.CustomCollections;
 using FileExplorer.ViewModels;
 
-namespace FileExplorer.DirectoriesHelpers
+namespace FileExplorer.Providers
 {
-    class FilesProvider : IItemsProvider<ISystemObjectViewModel>
+    class FilesProvider : ItemsProviderBase<ISystemObjectViewModel>
     {
+
         private readonly DirectoryInfo _directoryInfo;
         public FilesProvider(DirectoryInfo directoryInfo)
         {
             _directoryInfo = directoryInfo;
         }
 
-        public ObservableCollection<ISystemObjectViewModel> GetItems(IProgress<int> progress)
+        public override ObservableCollection<ISystemObjectViewModel> GetItems(IProgress<int> progress)
         {
             ObservableCollection<ISystemObjectViewModel> _collection = new ObservableCollection<ISystemObjectViewModel>();
             var files = _directoryInfo.GetFiles();
+            OnCountLoaded(files.Length);
             int length = files.Length;
+            double delta = 100.0/length;
             for (int index = 0; index < length; index++)
             {
                 var file = files[index];
                 _collection.Add(new FileViewModel(file));
-                progress.Report(index / (length*100));
+                progress.Report((int)(index* delta));
             }
             return _collection;
         }

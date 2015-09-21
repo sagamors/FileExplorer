@@ -75,13 +75,14 @@
     <Compile Include="CustomCollections\UnionCollection.cs" />
     <Compile Include="CustomCollections\IItemsProvider.cs" />
     <Compile Include="CustomCollections\IObservableCollection.cs" />
-    <Compile Include="DirectoriesHelpers\FilesProvider.cs" />
+    <Compile Include="Providers\FilesProvider.cs" />
+    <Compile Include="DirectoriesHelpers\INativeSystemInfo.cs" />
     <Compile Include="DirectoriesHelpers\NativeFileInfo.cs" />
-    <Compile Include="DirectoriesHelpers\NativeFilesProvider.cs" />
+    <Compile Include="Providers\NativeFilesProvider.cs" />
     <Compile Include="DirectoriesHelpers\NativeDirectoryInfo.cs" />
-    <Compile Include="DirectoriesHelpers\NativeSubDirectoryProvider.cs" />
+    <Compile Include="Providers\NativeSubDirectoryProvider.cs" />
     <Compile Include="DirectoriesHelpers\PathHelper.cs" />
-    <Compile Include="DirectoriesHelpers\SubDirectoriesProvider.cs" />
+    <Compile Include="Providers\SubDirectoriesProvider.cs" />
     <Compile Include="Helpers\IconExtractor.cs" />
     <Compile Include="Attached\TreeViewExtensionAttached.cs" />
     <Compile Include="Helpers\ObservableCollectionEx.cs" />
@@ -90,6 +91,7 @@
     <Compile Include="Services\MessageBoxService.cs" />
     <Compile Include="Services\Services.cs" />
     <Compile Include="ViewModels\DirectoryViewModel.cs" />
+    <Compile Include="ViewModels\DirectoryViewModelBase.cs" />
     <Compile Include="ViewModels\FileViewModel.cs" />
     <Compile Include="ViewModels\IDirectoryViewModel.cs" />
     <Compile Include="ViewModels\ISystemObjectViewModel.cs" />

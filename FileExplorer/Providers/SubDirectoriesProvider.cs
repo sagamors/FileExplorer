@@ -5,9 +5,9 @@ using System.IO;
 using FileExplorer.CustomCollections;
 using FileExplorer.ViewModels;
 
-namespace FileExplorer.DirectoriesHelpers
+namespace FileExplorer.Providers
 {
-    class SubDirectoriesProvider : IItemsProvider<IDirectoryViewModel>
+    class SubDirectoriesProvider : ItemsProviderBase<IDirectoryViewModel>
     {
         private readonly DirectoryInfo _directoryInfo;
         public IDirectoryViewModel Parent { get; }
@@ -17,11 +17,13 @@ namespace FileExplorer.DirectoriesHelpers
             Parent = parent;
         }
 
-        public ObservableCollection<IDirectoryViewModel> GetItems(IProgress<int> progress)
+        public override ObservableCollection<IDirectoryViewModel> GetItems(IProgress<int> progress)
         {
             ObservableCollection<IDirectoryViewModel> _collection = new ObservableCollection<IDirectoryViewModel>();
             var directories = _directoryInfo.GetDirectories();
             int length = directories.Length;
+            OnCountLoaded(length);
+            double delta = 100.0/length;
             for (int index = 0; index < directories.Length; index++)
             {
                 var info = directories[index];
@@ -33,7 +35,7 @@ namespace FileExplorer.DirectoriesHelpers
                 {
                     Debug.WriteLine(ex);
                 }
-                progress.Report(index/(length*100));
+                progress.Report((int) (index*delta));
             }
             return _collection;
         }

@@ -1,5 +1,7 @@
 ﻿using System.Windows.Input;
+using System.Windows.Media;
 using FileExplorer.CustomCollections;
+using Microsoft.Win32;
 
 namespace FileExplorer.ViewModels
 {
@@ -11,5 +13,7 @@ namespace FileExplorer.ViewModels
         ObservableCollectionBase<ISystemObjectViewModel> Children { get; }
         AsyncLoadCollection<IDirectoryViewModel> SubDirectories { get; }
         IDirectoryViewModel Parent { get; }
+        int ChildrenProgressLoading { get; }
+        bool ChildrenLoaded { set; }
     }
 }

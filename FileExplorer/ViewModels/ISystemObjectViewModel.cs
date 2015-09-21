@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Windows.Input;
 using System.Windows.Media;
-using PropertyChanged;
 
 namespace FileExplorer.ViewModels
 {
@@ -16,5 +15,8 @@ namespace FileExplorer.ViewModels
         string VisualPath { get; }
         ICommand OpenCommand { get; }
         bool IsSelected { get; set; }
+        ImageSource Icon { get; }
+        void Open();
+
     }
 }
