@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using FileExplorer.CustomCollections;
 using FileExplorer.ViewModels;
 
@@ -17,7 +18,7 @@ namespace FileExplorer.Providers
             Parent = parent;
         }
 
-        public override ObservableCollection<IDirectoryViewModel> GetItems(IProgress<int> progress)
+        public override ObservableCollection<IDirectoryViewModel> GetItems(IProgress<int> progress, CancellationToken token)
         {
             ObservableCollection<IDirectoryViewModel> _collection = new ObservableCollection<IDirectoryViewModel>();
             var directories = _directoryInfo.GetDirectories();
@@ -26,6 +27,7 @@ namespace FileExplorer.Providers
             double delta = 100.0/length;
             for (int index = 0; index < directories.Length; index++)
             {
+                token.ThrowIfCancellationRequested();
                 var info = directories[index];
                 try
                 {
@@ -35,7 +37,8 @@ namespace FileExplorer.Providers
                 {
                     Debug.WriteLine(ex);
                 }
-                progress.Report((int) (index*delta));
+                progress.Report((int)((index + 1) * delta));
+
             }
             return _collection;
         }

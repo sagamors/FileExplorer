@@ -13,7 +13,7 @@ namespace FileExplorer.CustomCollections
      {
         public virtual object SyncRoot { get; }
         public virtual bool IsSynchronized { get; }
-        public virtual int Count { get; }
+        public virtual int Count { protected set; get; }
         public virtual bool  IsReadOnly { get; }
         public virtual bool IsFixedSize { get; }
 

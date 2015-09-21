@@ -14,7 +14,7 @@ using Timer = System.Timers.Timer;
 namespace FileExplorer.CustomCollections
 {
     //minimal realization
-    public class AsyncLoadCollection<T> : ObservableCollectionBase<T> where T : class 
+    public class AsyncLoadCollection<T> : ObservableCollectionBase<T>
     {
 
         #region private fields
@@ -36,16 +36,9 @@ namespace FileExplorer.CustomCollections
         public bool IsLoaded { get; set; }
         public bool HasItems { get; private set; }
         public int PreLoadedCount { get; private set; }
-        private int _count = 0;
         private int _progressLoading;
 
-        public override int Count
-        {
-            get
-            {
-                return _count;
-            }
-        }
+        public override int Count { protected set;get; } = 0;
 
         public int ProgressLoading
         {
@@ -67,15 +60,16 @@ namespace FileExplorer.CustomCollections
 
         public AsyncLoadCollection(IItemsProvider<T> provider)
         {
+
             if (provider == null)
             {
                 throw new ArgumentNullException(nameof(provider));
             }
+
             _provider = provider;
             _synchronizationContext = new DispatcherSynchronizationContext(Application.Current.Dispatcher);
             timer = new Timer(_longLoadingTime.TotalMilliseconds);
             timer.Elapsed += Timer_Elapsed;
-
             _progress.ProgressChanged += _progress_ProgressChanged;
             provider.CountLoaded += Provider_CountLoaded;
         }
@@ -86,9 +80,7 @@ namespace FileExplorer.CustomCollections
            {
                PreLoadedCount = e.Count;
                HasItems = PreLoadedCount > 0;
-              OnPropertyChanged("PreLoadedCount");
            },null);
-
         }
 
         #endregion
@@ -161,7 +153,7 @@ namespace FileExplorer.CustomCollections
         public override bool Remove(T item)
         {
             var result = _collection.Remove(item);
-            _count = _collection.Count;
+            Count = _collection.Count;
             FireCollectionReset();
             return result;
         }
@@ -176,25 +168,38 @@ namespace FileExplorer.CustomCollections
             return _collection.IndexOf(item);
         }
 
-        public Task LoadAsync()
+        private Task _loadingTask;
+        public Task LoadAsync(CancellationToken token = new CancellationToken())
         {
+            if (IsLoading)
+            {
+                return _loadingTask;
+            }
             timer.Start();
+            token.Register(() =>
+            {
+                IsLoading = false;
+                IsLoaded = false;
+                _synchronizationContext.Send(SetCount, 0);
+            }
+            );
+            
             IsLoading = true;
             if (_collection != null)
                 _collection.Clear();
             _synchronizationContext.Send(SetCount, 0);
-            return Task.Run(() =>
+            return _loadingTask = Task.Run(() =>
             {
                 try
                 {
-                    _collection = _provider.GetItems(_progress);
-                    _synchronizationContext.Send(LoadCompleted, _collection.Count);
+                    _collection = _provider.GetItems(_progress, token);
                 }
                 catch (Exception ex)
                 {
                     Debug.WriteLine(ex);
                 }
-            });
+                _synchronizationContext.Send(LoadCompleted, _collection.Count);
+            }, token);
         }
 
         public override T this[int index]
@@ -214,8 +219,8 @@ namespace FileExplorer.CustomCollections
 
         private void SetCount(object args)
         {
-            _count = (int) args;
-            HasItems = _count > 0;
+            Count = (int) args;
+            HasItems = Count > 0;
             FireCollectionReset();
         }
 

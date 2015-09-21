@@ -69,12 +69,16 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Attached\ControlDoubleClick.cs" />
+    <Compile Include="Converters\BoolToVisibilityConverter.cs" />
+    <Compile Include="Converters\AndMultiBoolConverter.cs" />
+    <Compile Include="Converters\InverseBoolConverter.cs" />
     <Compile Include="Converters\ToSystemFormatConverter.cs" />
     <Compile Include="CustomCollections\AsyncLoadCollection.cs" />
     <Compile Include="CustomCollections\ObservableCollectionBase.cs" />
     <Compile Include="CustomCollections\UnionCollection.cs" />
     <Compile Include="CustomCollections\IItemsProvider.cs" />
     <Compile Include="CustomCollections\IObservableCollection.cs" />
+    <Compile Include="CustomCollections\UnionCollectionEx.cs" />
     <Compile Include="Providers\FilesProvider.cs" />
     <Compile Include="DirectoriesHelpers\INativeSystemInfo.cs" />
     <Compile Include="DirectoriesHelpers\NativeFileInfo.cs" />
@@ -100,10 +104,20 @@
     <Compile Include="ViewModels\RootDirectoryViewModel.cs" />
     <Compile Include="ViewModels\TopViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Compile Include="Views\DirectoriesTreeView.xaml.cs">
+      <DependentUpon>DirectoriesTreeView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DirectoryContentView.xaml.cs">
+      <DependentUpon>DirectoryContentView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\TopView.xaml.cs">
       <DependentUpon>TopView.xaml</DependentUpon>
     </Compile>
-    <Page Include="Resources\Styles.xaml">
+    <Page Include="Views\DirectoriesTreeView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DirectoryContentView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

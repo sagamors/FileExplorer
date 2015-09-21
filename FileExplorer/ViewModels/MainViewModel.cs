@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Threading;
 using System.Windows.Threading;
 using FileExplorer.DirectoriesHelpers;
 using FileExplorer.Helpers;
@@ -21,7 +21,7 @@ namespace FileExplorer.ViewModels
         #region public properties
 
         public string Title { get; } = "FileExplorer";
-        public TopViewModel Top { set; get; } = new TopViewModel();
+        public TopViewModel Top { set; get; }
 
         public ObservableCollectionEx<IDirectoryViewModel> Items { set; get; } =
             new ObservableCollectionEx<IDirectoryViewModel>();
@@ -61,12 +61,14 @@ namespace FileExplorer.ViewModels
         public MainViewModel()
         {
             _dispatcher = Dispatcher.CurrentDispatcher;
+         
             SelectedDirectoryChanged += MainViewModel_SelectedDirectoryChanged;
             var root = new RootDirectoryViewModel();
             Items.Add(root);
+            _pathHelper = new PathHelper(root);
+            Top = new TopViewModel(_pathHelper);
             SelectedDirectory = root;
-            _pathHelper = new PathHelper(SelectedDirectory);
-            Top.CurrentPathSet += Top_CurrentPathSet;
+    
             foreach (var drive in DriveInfo.GetDrives())
             {
                 if (!drive.IsReady) return;
@@ -74,8 +76,7 @@ namespace FileExplorer.ViewModels
                 directoryFileSystemWatcher.Path = drive.Name;
                 /* Watch for changes in LastAccess and LastWrite times, and
                    the renaming of files or directories. */
-                directoryFileSystemWatcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite |
-                                                          NotifyFilters.FileName | NotifyFilters.DirectoryName;
+                directoryFileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
                 // Add event handlers.
                 directoryFileSystemWatcher.Changed += OnChanged;
                 directoryFileSystemWatcher.Created += OnChanged;
@@ -101,12 +102,6 @@ namespace FileExplorer.ViewModels
         private void OnSelectedDirectoryChanged(IDirectoryViewModel directoryViewModel)
         {
             SelectedDirectoryChanged?.Invoke(this, new SelectedDirectoryChangedArgs(directoryViewModel));
-        }
-
-        private void Top_CurrentPathSet(object sender, NewPathSetArgs e)
-        {
-            var child = _pathHelper.GetAndLoadDirectory(e.Path);
-            child.IsSelected = true;
         }
 
         // Define the event handlers.

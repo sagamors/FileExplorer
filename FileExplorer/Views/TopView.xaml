@@ -11,13 +11,13 @@
             <Setter Property="Margin" Value="5" />
         </Style>
         <Style x:Key="NavigationButtonStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="FontFamily" Value="Marlett"/>
-            <Setter Property="Margin" Value="1"/>
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontFamily" Value="Marlett" />
+            <Setter Property="Margin" Value="1" />
             <Style.Triggers>
                 <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Foreground" Value="Gray"/>
-            </Trigger>
+                    <Setter Property="Foreground" Value="Gray" />
+                </Trigger>
             </Style.Triggers>
         </Style>
     </UserControl.Resources>
@@ -30,20 +30,19 @@
         <Button Grid.Column="0"
                 Command="{Binding BackwardCommand}"
                 Style="{StaticResource BaseStyle}">
-            <TextBlock Style="{StaticResource NavigationButtonStyle}"  Text="3"/>
-        </Button> 
+            <TextBlock Style="{StaticResource NavigationButtonStyle}" Text="3" />
+        </Button>
         <Button Grid.Column="1"
                 Command="{Binding ForwardCommand}"
                 Style="{StaticResource BaseStyle}">
-            <TextBlock Style="{StaticResource NavigationButtonStyle}"  Text="4"/>
+            <TextBlock Style="{StaticResource NavigationButtonStyle}" Text="4" />
         </Button>
         <TextBox Grid.Column="2"
+                 VerticalAlignment="Center"
                  Style="{StaticResource BaseStyle}"
                  Text="{Binding CurrentPath,
                                 Mode=TwoWay,
-                                UpdateSourceTrigger=PropertyChanged}"
-                 VerticalAlignment="Center"
-                 >
+                                UpdateSourceTrigger=PropertyChanged}">
             <TextBox.InputBindings>
                 <KeyBinding Key="Enter" Command="{Binding NewPathSetCommand}" />
             </TextBox.InputBindings>

@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Threading;
 using FileExplorer.DirectoriesHelpers;
 
 namespace FileExplorer.CustomCollections
 {
     public interface IItemsProvider<T>
     {
-        ObservableCollection<T> GetItems(IProgress<int> progress);
+        ObservableCollection<T> GetItems(IProgress<int> progress, CancellationToken token);
         event EventHandler<CountLoadedEventArgs> CountLoaded;
     }
 
     public abstract class ItemsProviderBase<T> : IItemsProvider<T>
     {
-        public abstract ObservableCollection<T> GetItems(IProgress<int> progress);
+        public abstract ObservableCollection<T> GetItems(IProgress<int> progress, CancellationToken token);
 
         public event EventHandler<CountLoadedEventArgs> CountLoaded;
 

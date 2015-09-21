@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using FileExplorer.CustomCollections;
 using FileExplorer.DirectoriesHelpers;
-using FileExplorer.Helpers;
 using FileExplorer.Providers;
 using PropertyChanged;
 
@@ -12,6 +11,7 @@ namespace FileExplorer.ViewModels
     [ImplementPropertyChanged]
     internal class RootDirectoryViewModel : DirectoryViewModelBase
     {
+        public static DriveInfo[] Drives { get; } = DriveInfo.GetDrives();
         #region constructors
 
         public RootDirectoryViewModel() : base(new NativeDirectoryInfo(),null)
@@ -27,15 +27,12 @@ namespace FileExplorer.ViewModels
             Files = new AsyncLoadCollection<ISystemObjectViewModel>(nativeFilesProvider);
             IsExpanded = true;
             IsSelected = true;
-            Children = new UnionCollection<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel>(
-                SubDirectories, Files);
-            OpenCommand = new RelayCommand(() => Open());
+            Children = new UnionCollectionEx<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel>(SubDirectories, Files);
         }
 
         public RootDirectoryViewModel(NativeDirectoryInfo nativeDirectoryInfo, IDirectoryViewModel parent) : base(nativeDirectoryInfo, parent)
         {
             _nativeSystemInfo = nativeDirectoryInfo;
-            Parent = parent;
             var directoryUnfo = new DirectoryInfo(nativeDirectoryInfo.Path);
             var subDirectoryProvider = new SubDirectoriesProvider(directoryUnfo, this);
             var filesProvider = new FilesProvider(directoryUnfo);
@@ -43,14 +40,13 @@ namespace FileExplorer.ViewModels
             Path = nativeDirectoryInfo.Path;
             VisualPath = Parent.VisualPath + "\\" + DisplayName;
             Size = -1;
-            HasItems = directoryUnfo.EnumerateDirectories().Any();
+            //is drive?
+            DriveInfo driveInfo =  Drives.FirstOrDefault(info => PathHelper.NormalizePath(info.Name) == PathHelper.NormalizePath(Path));
+            HasItems = driveInfo?.IsReady ?? directoryUnfo.EnumerateDirectories().Any();
             SubDirectories = new AsyncLoadCollection<IDirectoryViewModel>(subDirectoryProvider);
             SubDirectories.CollectionChanged += _subDirectories_CollectionChanged;
             Files = new AsyncLoadCollection<ISystemObjectViewModel>(filesProvider);
-            Children =
-                new UnionCollection<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel>(
-                    SubDirectories, Files);
-            OpenCommand = new RelayCommand(Open);
+            Children = new UnionCollectionEx<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel>(SubDirectories, Files);
         }
 
         #endregion
@@ -61,16 +57,6 @@ namespace FileExplorer.ViewModels
             NotifyCollectionChangedEventArgs e)
         {
             HasItems = SubDirectories.Count != 0;
-        }
-
-        #endregion
-
-        #region public methods
-
-        public override void Open()
-        {
-            Parent.IsExpanded = true;
-            IsSelected = true;
         }
 
         #endregion

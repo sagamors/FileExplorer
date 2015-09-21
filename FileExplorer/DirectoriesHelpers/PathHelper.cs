@@ -1,11 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using FileExplorer.ViewModels;
 
 namespace FileExplorer.DirectoriesHelpers
 {
-    class PathHelper
+    public class PathHelper
     {
         private readonly IDirectoryViewModel _root;
 
@@ -14,39 +16,51 @@ namespace FileExplorer.DirectoriesHelpers
             _root = root;
         }
 
-        public IDirectoryViewModel GetAndLoadDirectory(string path)
+        public Task<IDirectoryViewModel> GetAndLoadDirectory(string path, CancellationToken token)
         {
-            IDirectoryViewModel child = null;
-            IDirectoryViewModel findedParent = null;
-            child = _root;
-
-            //check first 
-            string trimedPath = Trim(path);
-            if (Trim(_root.VisualPath) == trimedPath) return _root;
-
-            do
+            return Task.Run(() =>
             {
-                findedParent = child;
-                child = findedParent.SubDirectories.FirstOrDefault(model => Contains(trimedPath, Trim(model.VisualPath)));
-                if (child == null) break;
-                child.IsExpanded = true;
-            } while (Trim(child.VisualPath) != trimedPath);
+                IDirectoryViewModel child = null;
+                IDirectoryViewModel findedParent = null;
+                child = _root;
 
-            if (child != null) return child;
+                //check first 
+                string trimedPath = Trim(path);
+                if (Trim(_root.VisualPath) == trimedPath) return _root;
 
-            if (!Directory.Exists(trimedPath))
-            {
-                throw  new Exception("Directory does exist");
-            }
+                do
+                {
+                    findedParent = child;
+                    child = findedParent.SubDirectories.FirstOrDefault(model => Contains(trimedPath, Trim(model.VisualPath)));
+                    if (child == null) break;
+                    if (!findedParent.SubDirectories.IsLoaded)
+                    {
+                        findedParent.SubDirectories.LoadAsync(token).Wait(token);
+                    }
+                    child.IsExpanded = true;
+                } while (Trim(child.VisualPath) != trimedPath);
 
-            child = _root;
-            do
-            {
-                findedParent = child;
-                child = findedParent.SubDirectories.First(model => Contains(NormalizePath(path), NormalizePath(model.Path)));
-                child.IsExpanded = true;
-            } while (NormalizePath(child.Path) != NormalizePath(path));
-            return child;
+                if (child != null) return child;
+
+                if (!Directory.Exists(trimedPath))
+                {
+                    throw new Exception("Directory does exist");
+                }
+
+                child = _root;
+
+                while (NormalizePath(child.Path) != NormalizePath(path))
+                {
+                    if (!child.SubDirectories.IsLoaded)
+                    {
+                        child.SubDirectories.LoadAsync(token).Wait(token);
+                    }
+                    findedParent = child;
+                    child = findedParent.SubDirectories.First(model => Contains(NormalizePath(path), NormalizePath(model.Path)));
+                    child.IsExpanded = true;
+                }
+                return child;
+            }, token);
         }
 
         public IDirectoryViewModel GetDirectory(string path)
@@ -64,8 +78,9 @@ namespace FileExplorer.DirectoriesHelpers
             return child;
         }
 
-        private static string NormalizePath(string path)
+        public static string NormalizePath(string path)
         {
+            if (path == "") return "";
             return Trim(Path.GetFullPath(new Uri(path).LocalPath));
         }
 

@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 
 namespace FileExplorer.CustomCollections
 {
+    //todo подумать о типе коллекции
     //minimum realization 
     public class UnionCollection<TFirst,TSecond,TCommon> : ObservableCollectionBase<TCommon> where TSecond : TCommon where TFirst : TCommon
     {
