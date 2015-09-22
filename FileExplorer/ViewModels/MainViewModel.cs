@@ -87,17 +87,26 @@ namespace FileExplorer.ViewModels
                     case WatcherChangeTypes.Changed:
                         if (isFile)
                         {
-                            index= FindOf(parent, e.FullPath);
+                            index= FindFileIndex(parent, e.FullPath);
                             if (index == -1) return;
                             parent.Files[index] = new FileViewModel(new FileInfo(e.FullPath));
                         }
                         else
                         {
-                            index = child.Parent.SubDirectories.IndexOf(child);
-                            bool isSelected = child.IsSelected;
-                            child.IsSelected = false;
-                            child.Parent.SubDirectories[index] = new DirectoryViewModel(new DirectoryInfo(e.FullPath),
-                                child.Parent) {IsExpanded = child.IsExpanded, IsSelected = isSelected};
+                            if(parent==null) return;
+                            index = parent.SubDirectories.IndexOf(child);
+                            var newDirectory = new DirectoryViewModel(new DirectoryInfo(e.FullPath), child.Parent);
+                            parent.SubDirectories[index] = newDirectory;
+                            if (child != null)
+                            {
+                                newDirectory.IsExpanded = child.IsExpanded;
+                                newDirectory.IsSelected = child.IsSelected;
+                            }
+                            if (PathHelper.NormalizePath(Top.SelectedDirectory.Path) == PathHelper.NormalizePath(e.FullPath))
+                            {
+                                Top.SelectedDirectory = newDirectory;
+                            }
+
                         }
                         break;
 
@@ -108,7 +117,7 @@ namespace FileExplorer.ViewModels
             });
         }
 
-        private int FindOf(IDirectoryViewModel directoryViewModel,string path)
+        private int FindFileIndex(IDirectoryViewModel directoryViewModel,string path)
         {
             for (int i = 0; i < directoryViewModel.Files.Count; i++)
             {
@@ -131,7 +140,6 @@ namespace FileExplorer.ViewModels
             if (isFile)
             {
                 if(!parent.Files.IsLoaded)  return;
-
             }
             else
             {
@@ -203,7 +211,7 @@ namespace FileExplorer.ViewModels
                 {
                     if (parent.Files.IsLoaded)
                     {
-                        index = FindOf(parent, path);
+                        index = FindFileIndex(parent, path);
                         parent.Files.Remove(parent.Files[index]);
                     }
                 }

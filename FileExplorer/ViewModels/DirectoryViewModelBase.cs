@@ -126,7 +126,7 @@ namespace FileExplorer.ViewModels
         {
             if (NoAccess)
             {
-                MessageBoxService.Instance.ShowError(new UnauthorizedAccessException().Message);
+                MessageBoxService.Instance.ShowError("Access to the directory is denied");
                 return;
             }
             _isOpening = true;

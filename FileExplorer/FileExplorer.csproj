@@ -80,6 +80,7 @@
     <Compile Include="CustomCollections\IObservableCollection.cs" />
     <Compile Include="CustomCollections\UnionCollectionEx.cs" />
     <Compile Include="Helpers\DriveInfoEx.cs" />
+    <Compile Include="Helpers\TemplateSelector.cs" />
     <Compile Include="Providers\FilesProvider.cs" />
     <Compile Include="DirectoriesHelpers\INativeSystemInfo.cs" />
     <Compile Include="DirectoriesHelpers\NativeFileInfo.cs" />

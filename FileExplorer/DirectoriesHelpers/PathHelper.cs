@@ -72,26 +72,20 @@ namespace FileExplorer.DirectoriesHelpers
             do
             {
                 findedParent = child;
-                if (child == null)
-                {
-                    
-                }
-
-
                 child = findedParent.SubDirectories.FirstOrDefault(model => Contains(NormalizePath(path), NormalizePath(model.Path)));
                 if (child == null)
                 {
-//                    if (!findedParent.SubDirectories.IsLoaded)
-//                    {
-                        if (NormalizePath(findedParent.Path) == NormalizePath(Directory.GetParent(path).FullName))
-                        {
-                            parent = findedParent;
-                            
-                        }
-//                    }
+                    if (NormalizePath(findedParent.Path) == NormalizePath(Directory.GetParent(path).FullName))
+                    {
+                        parent = findedParent;
+                    }
                     return null;
                 }
             } while (NormalizePath(child.Path) != NormalizePath(path));
+            if (child != null)
+            {
+                parent = child.Parent;
+            }
             return child;
         }
 

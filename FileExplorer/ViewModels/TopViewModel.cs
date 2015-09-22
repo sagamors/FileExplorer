@@ -37,7 +37,7 @@ namespace FileExplorer.ViewModels
         }
 
         public ICommand NewPathSetCommand { get; }
-        public event EventHandler<SelectDirectoryArgs> SelectDirectory;
+
         public ICommand BackwardCommand { get; }
         public ICommand ForwardCommand { get; }
 
@@ -46,7 +46,10 @@ namespace FileExplorer.ViewModels
         {
             set
             {
+                
                 _selectedDirectory = value;
+                if(_selectedDirectory!=null)
+                    _selectedDirectory.LoadAll();
                 if (_selectedDirectory.VisualPath != CurrentPath || _selectedDirectory.Path != CurrentPath)
                 {
                     CurrentPath = SelectedDirectory.VisualPath;
@@ -81,12 +84,6 @@ namespace FileExplorer.ViewModels
         #endregion
 
         #region public methods
-
-        public void SetCurrentPath(string path)
-        {
-            AddToHistory(path);
-            SetWithOutSave(path);
-        }
 
         public void BackwardNavigation()
         {
@@ -163,7 +160,6 @@ namespace FileExplorer.ViewModels
                         throw child.Exception;
                     if (SelectedDirectory.VisualPath == child.Result.VisualPath ) return;
                     SelectedDirectory = child.Result;
-                    SelectedDirectory.LoadAll();
                     AddToHistory(CurrentPath);
                 }
                 catch (Exception exception)
@@ -215,7 +211,6 @@ namespace FileExplorer.ViewModels
                     }
                     _fromHistory = true;
                     SelectedDirectory = child.Result;
-                    SelectedDirectory.LoadAll();
                 }
                 catch (Exception exception)
                 {
@@ -231,32 +226,10 @@ namespace FileExplorer.ViewModels
             }, _cancellationTokenSource.Token);
         }
 
-        private void OnCurrentPathSetOutClear()
-        {
-/*            try
-            {
-                OnCurrentPath();
-            }
-            catch (Exception exception)
-            {
-
-                MessageBoxService.ShowError(exception.Message);
-            }*/
-        }
-
         private void OnSelectedDirectoryChanged(IDirectoryViewModel directoryViewModel)
         {
             SelectedDirectoryChanged?.Invoke(this, new SelectedDirectoryChangedArgs(directoryViewModel));
         }
-
-        #endregion
-
-/*        protected virtual void OnSelectDirectory(IDirectoryViewModel directoryViewModel)
-        {
-            SelectDirectory?.Invoke(this, new SelectDirectoryArgs(directoryViewModel));
-        }*/
-
-        #region public types
 
         public class SelectedDirectoryChangedArgs : EventArgs
         {
@@ -269,16 +242,6 @@ namespace FileExplorer.ViewModels
         }
 
         #endregion
-    }
-
-    public class NewPathSetArgs : EventArgs
-    {
-        public string Path { set; get; }
-
-        public NewPathSetArgs(string path)
-        {
-            Path = path;
-        }
     }
 
     public class SelectDirectoryArgs
