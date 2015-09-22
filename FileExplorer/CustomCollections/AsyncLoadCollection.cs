@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -39,6 +40,8 @@ namespace FileExplorer.CustomCollections
         private int _progressLoading;
 
         public override int Count { protected set;get; } = 0;
+        public event EventHandler<ErrorEventArgs> LoadingError; 
+
 
         public int ProgressLoading
         {
@@ -182,8 +185,7 @@ namespace FileExplorer.CustomCollections
             timer.Start();
             token.Register(() =>
             {
-                IsLoading = false;
-                IsLoaded = false;
+                ResetState();
                 _synchronizationContext.Send(SetCount, 0);
             }
             );
@@ -200,7 +202,9 @@ namespace FileExplorer.CustomCollections
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine(ex);
+                    OnLoadingError(ex);
+                    _synchronizationContext.Send(SetCount, 0);
+                    return;
                 }
                 _synchronizationContext.Send(LoadCompleted, _collection.Count);
             }, token);
@@ -291,6 +295,22 @@ namespace FileExplorer.CustomCollections
         protected virtual void OnCollectionLoaded()
         {
             CollectionLoaded?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected virtual void OnLoadingError(Exception e)
+        {
+            ResetState();
+            _synchronizationContext.Send(state =>
+            {
+                LoadingError?.Invoke(this, new ErrorEventArgs(e));
+            },0);
+        }
+
+        private void ResetState()
+        {
+            IsLoading = false;
+            IsLoaded = false;
+            IsLongLoading = false;
         }
     }
 }

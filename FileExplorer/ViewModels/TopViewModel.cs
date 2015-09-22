@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -18,7 +19,6 @@ namespace FileExplorer.ViewModels
         #region private fields
 
         private List<string> history = new List<string>();
-        private IMessageBoxService MessageBoxService = new MessageBoxService();
         private int _positionHistory = -1;
         private Dispatcher _dispatcher;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -113,7 +113,7 @@ namespace FileExplorer.ViewModels
         private void ClearAfterPosition()
         {
             history.RemoveRange(_positionHistory + 1, history.Count - _positionHistory - 1);
-            _positionHistory = history.Count;
+            _positionHistory = history.Count-1;
         }
 
         private void AddToHistory(string path)
@@ -168,7 +168,7 @@ namespace FileExplorer.ViewModels
                 }
                 catch (Exception exception)
                 {
-                    MessageBoxService.ShowError(exception.Message);
+                    MessageBoxService.Instance.ShowError(exception.Message);
                 }
 
             }, _cancellationTokenSource.Token);
@@ -185,8 +185,16 @@ namespace FileExplorer.ViewModels
                     {
                         child.Wait();
                     }
-                    catch (AggregateException)
+                    catch (AggregateException ex)
                     {
+                        if (ex.InnerExceptions.FirstOrDefault(exception => exception.GetType() == typeof(OperationCanceledException))!=null) return;
+                        if (!_currentPathBroken)
+                        {
+                            _currentPathBroken = true;
+                            _positionHistory--;
+                            ClearAfterPosition();
+                        }
+                        MessageBoxService.Instance.ShowError(ex.InnerExceptions.OfType<Exception>().First().Message); 
                         //todo
                         return;
                     }
@@ -217,7 +225,7 @@ namespace FileExplorer.ViewModels
                         _positionHistory--;
                         ClearAfterPosition();
                     }
-                    MessageBoxService.ShowError(exception.Message);
+                    MessageBoxService.Instance.ShowError(exception.Message);
                 }
 
             }, _cancellationTokenSource.Token);

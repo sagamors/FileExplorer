@@ -9,8 +9,22 @@ namespace FileExplorer.CustomCollections
     {
         private AsyncLoadCollection<TFirst> _first;
         private AsyncLoadCollection<TSecond> _second;
+        private bool _isLoaded;
         public bool IsLoading { private set; get; }
-        public bool IsLoaded { private set; get; }
+
+        public bool IsLoaded
+        {
+            private set
+            {
+                _isLoaded = value;
+                if (_isLoaded)
+                {
+                    IsLoading = false;
+                }
+            }
+            get { return _isLoaded; }
+        }
+
         public int Progress { private set; get; }
 
         public UnionCollectionEx(AsyncLoadCollection<TFirst> first, AsyncLoadCollection<TSecond> second)

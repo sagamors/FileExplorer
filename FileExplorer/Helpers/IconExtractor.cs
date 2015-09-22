@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
@@ -51,6 +52,10 @@ namespace FileExplorer.Helpers
             }
             WinAPI.SHFILEINFO shfileinfo = new WinAPI.SHFILEINFO();
             WinAPI.SHGetFileInfo(path, 0, out shfileinfo, (uint)Marshal.SizeOf(shfileinfo), flags);
+            if (shfileinfo.hIcon == IntPtr.Zero)
+            {
+               return GetIcon(path);
+            }
             imageSource = Imaging.CreateBitmapSourceFromHIcon(shfileinfo.hIcon, sizeRect,BitmapSizeOptions.FromEmptyOptions());
             IconsDictionary.Add(iconIndex, imageSource);
             WinAPI.DestroyIcon(shfileinfo.hIcon);
@@ -86,6 +91,15 @@ namespace FileExplorer.Helpers
             WinAPI.DestroyIcon(shfileinfo.hIcon);
             shfileinfo.hIcon = IntPtr.Zero;
             return imageSource;
+        }
+
+        private static ImageSource GetIcon(string fileName)
+        {
+            Icon icon = Icon.ExtractAssociatedIcon(fileName);
+            return Imaging.CreateBitmapSourceFromHIcon(
+                        icon.Handle,
+                        new Int32Rect(0,0,icon.Width, icon.Height),
+                        BitmapSizeOptions.FromEmptyOptions());
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using FileExplorer.CustomCollections;
 using FileExplorer.DirectoriesHelpers;
@@ -26,16 +27,31 @@ namespace FileExplorer.ViewModels
             DisplayName = _directoryInfo.Name;
             if (Parent != null)
                 VisualPath = Parent.VisualPath + "\\" + DisplayName;
-            HasItems = directoryInfo.EnumerateDirectories().Any();
             Files = new AsyncLoadCollection<ISystemObjectViewModel>(new FilesProvider(directoryInfo));
             SubDirectories = new AsyncLoadCollection<IDirectoryViewModel>(directoryProvider);
             Children = new UnionCollectionEx<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel>(
                     SubDirectories, Files);
+            try
+            {
+                UpdateHasItems();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                NoAccess = true;
+            }
+
         }
 
         #endregion
 
         #region public methods
+
+        public override void UpdateHasItems()
+        {
+           var directory= _directoryInfo.EnumerateDirectories()
+                .FirstOrDefault(info => ((info.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden));
+            HasItems = directory!=null;
+        }
 
         #endregion
 

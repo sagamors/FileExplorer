@@ -4,11 +4,14 @@ using System.Windows.Media;
 using FileExplorer.CustomCollections;
 using FileExplorer.DirectoriesHelpers;
 using FileExplorer.Helpers;
+using FileExplorer.Services;
 
 namespace FileExplorer.ViewModels
 {
     public class DirectoryViewModelBase : ViewModelBase, IDirectoryViewModel
     {
+        private bool _isOpening;
+
         public static event EventHandler<OpenDirectoryArgs> OpenDirectory; 
 
         public class OpenDirectoryArgs
@@ -54,6 +57,7 @@ namespace FileExplorer.ViewModels
         }
 
         private bool _isSelected;
+        private AsyncLoadCollection<IDirectoryViewModel> _subDirectories;
 
         public bool IsSelected
         {
@@ -62,14 +66,28 @@ namespace FileExplorer.ViewModels
             {
                 _isSelected = value;
                 if(_isSelected)
-                    LoadAll();
+                    Open();
             }
         }
 
         public AsyncLoadCollection<ISystemObjectViewModel> Files { protected set; get; }
-        public AsyncLoadCollection<IDirectoryViewModel> SubDirectories { protected set; get; }
+
+        public AsyncLoadCollection<IDirectoryViewModel> SubDirectories
+        {
+            protected set
+            {
+                if(_subDirectories!=null)
+                _subDirectories.LoadingError -= SubDirectories_LoadingError;
+                _subDirectories = value;
+                if (_subDirectories != null)
+                    _subDirectories.LoadingError += SubDirectories_LoadingError;
+            }
+            get { return _subDirectories; }
+        }
+
         public UnionCollectionEx<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel> Children { protected set; get; }
         public IDirectoryViewModel Parent { get; }
+        public bool NoAccess { protected set;get; }
         public ICommand OpenCommand { get; }
 
         public ImageSource Icon
@@ -91,10 +109,27 @@ namespace FileExplorer.ViewModels
             Parent = parent;
             OpenCommand = new RelayCommand(Open);
             Size = -1;
+
+        }
+
+        private void SubDirectories_LoadingError(object sender, System.IO.ErrorEventArgs e)
+        {
+            if (_isOpening)
+            {
+                MessageBoxService.Instance.ShowError(e.GetException().Message);
+                Parent.Open();
+            }
+            _isOpening = false;
         }
 
         public void Open()
         {
+            if (NoAccess)
+            {
+                MessageBoxService.Instance.ShowError(new UnauthorizedAccessException().Message);
+                return;
+            }
+            _isOpening = true;
             LoadAll();
             OnOpenDirectory(this);
         }

@@ -1,7 +1,5 @@
-﻿using System.Windows.Input;
-using System.Windows.Media;
-using FileExplorer.CustomCollections;
-using Microsoft.Win32;
+﻿using FileExplorer.CustomCollections;
+
 
 namespace FileExplorer.ViewModels
 {
@@ -13,6 +11,7 @@ namespace FileExplorer.ViewModels
         AsyncLoadCollection<IDirectoryViewModel> SubDirectories { get; }
         UnionCollectionEx<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel> Children { get; }
         IDirectoryViewModel Parent { get; }
+        bool NoAccess { get; }
         void LoadAll();
         void UpdateHasItems();
     }

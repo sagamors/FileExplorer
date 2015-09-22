@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using FileExplorer.CustomCollections;
@@ -25,20 +24,29 @@ namespace FileExplorer.Providers
             int length = directories.Length;
             OnCountLoaded(length);
             double delta = 100.0/length;
+            int progressCount = 0;
             for (int index = 0; index < directories.Length; index++)
             {
                 token.ThrowIfCancellationRequested();
                 var info = directories[index];
-                try
+                if ((info.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)
                 {
-                    _collection.Add(new DirectoryViewModel(info, Parent));
+                    try
+                    {
+                        _collection.Add(new DirectoryViewModel(info, Parent));
+                    }
+                    catch (UnauthorizedAccessException ex)
+                    {
+                        /*Debug.WriteLine(ex);*/
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex);
-                }
-                progress.Report((int)((index + 1) * delta));
 
+                int newProgress = (int)((index + 1) * delta);
+                if (newProgress - progressCount > 10)
+                {
+                    progressCount = newProgress;
+                    progress.Report(progressCount);
+                }
             }
             return _collection;
         }

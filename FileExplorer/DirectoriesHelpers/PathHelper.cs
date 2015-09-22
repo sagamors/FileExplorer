@@ -26,7 +26,7 @@ namespace FileExplorer.DirectoriesHelpers
 
                 //check first 
                 string trimedPath = Trim(path);
-
+                bool isVisualPath = Contains(trimedPath, Trim(_root.VisualPath));
                 while (Trim(child.VisualPath) != trimedPath)
                 {
                     if (!child.SubDirectories.IsLoaded)
@@ -41,7 +41,7 @@ namespace FileExplorer.DirectoriesHelpers
 
                 if (child != null) return child;
 
-                if (!Directory.Exists(trimedPath))
+                if (isVisualPath || !Directory.Exists(trimedPath))
                 {
                     throw new Exception("Directory does exist");
                 }

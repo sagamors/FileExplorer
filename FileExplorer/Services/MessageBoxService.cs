@@ -2,9 +2,16 @@
 
 namespace FileExplorer.Services
 {
-    class MessageBoxService : IMessageBoxService
+    public class MessageBoxService : IMessageBoxService
     {
-        public void Show(string caption,string message)
+        public static MessageBoxService Instance { get; } = new MessageBoxService();
+
+        private MessageBoxService()
+        {
+
+        }
+
+        public void Show(string caption, string message)
         {
             MessageBox.Show(message, caption);
         }
