@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-
+using System.Text;
 namespace FileExplorer.Helpers
 {
     public static class IconExtractor
@@ -31,36 +34,47 @@ namespace FileExplorer.Helpers
 
         public static Dictionary<int, ImageSource> IconsDictionary { get; } = new Dictionary<int, ImageSource>();
 
-        public static ImageSource GetIcon(string path,int iconIndex,IconSize size = IconSize.Small)
+        public static ImageSource GetIcon(string path, int iconIndex, IconSize size = IconSize.Small)
         {
-            ImageSource imageSource = null;
-            if (IconsDictionary.TryGetValue(iconIndex, out imageSource))
+            try
             {
+                ImageSource imageSource = null;
+                if (IconsDictionary.TryGetValue(iconIndex, out imageSource))
+                {
+                    return imageSource;
+                }
+                Int32Rect sizeRect;
+                WinAPI.SHGFI flags;
+                if (IconSize.Small == size)
+                {
+                    flags = commonFlags | WinAPI.SHGFI.SHGFI_SMALLICON;
+                    sizeRect = new Int32Rect(0, 0, 16, 16);
+                }
+                else
+                {
+                    flags = commonFlags | WinAPI.SHGFI.SHGFI_LARGEICON;
+                    sizeRect = new Int32Rect(0, 0, 32, 32);
+                }
+                WinAPI.SHFILEINFO shfileinfo = new WinAPI.SHFILEINFO();
+                WinAPI.SHGetFileInfo(path, 0, out shfileinfo, (uint) Marshal.SizeOf(shfileinfo), flags);
+                if (shfileinfo.hIcon == IntPtr.Zero)
+                {
+                    Console.WriteLine("icon:"+iconIndex);
+                    return GetIcon(path);
+                }
+                imageSource = Imaging.CreateBitmapSourceFromHIcon(shfileinfo.hIcon, sizeRect,
+                    BitmapSizeOptions.FromEmptyOptions());
+                IconsDictionary.Add(iconIndex, imageSource);
+                WinAPI.DestroyIcon(shfileinfo.hIcon);
+                shfileinfo.hIcon = IntPtr.Zero;
+
                 return imageSource;
             }
-            Int32Rect sizeRect;
-            WinAPI.SHGFI flags;
-            if (IconSize.Small == size)
+            catch (Exception ex)
             {
-                flags = commonFlags | WinAPI.SHGFI.SHGFI_SMALLICON;
-                sizeRect = new Int32Rect(0,0,16,16);
+                Console.WriteLine("2" + ex);
+                return null;
             }
-            else
-            {
-                flags = commonFlags | WinAPI.SHGFI.SHGFI_LARGEICON;
-                sizeRect = new Int32Rect(0, 0, 32, 32);
-            }
-            WinAPI.SHFILEINFO shfileinfo = new WinAPI.SHFILEINFO();
-            WinAPI.SHGetFileInfo(path, 0, out shfileinfo, (uint)Marshal.SizeOf(shfileinfo), flags);
-            if (shfileinfo.hIcon == IntPtr.Zero)
-            {
-               return GetIcon(path);
-            }
-            imageSource = Imaging.CreateBitmapSourceFromHIcon(shfileinfo.hIcon, sizeRect,BitmapSizeOptions.FromEmptyOptions());
-            IconsDictionary.Add(iconIndex, imageSource);
-            WinAPI.DestroyIcon(shfileinfo.hIcon);
-            shfileinfo.hIcon = IntPtr.Zero;
-            return imageSource;
         }
 
 

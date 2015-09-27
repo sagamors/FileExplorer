@@ -60,7 +60,7 @@ namespace FileExplorer.DirectoriesHelpers
         {
             Path = path;
             shInfo = new WinAPI.SHFILEINFO();
-            WinAPI.SHGetFileInfo(path, 0, out shInfo, (uint) Marshal.SizeOf(shInfo), vFlags);
+            WinAPI.SHGetFileInfo(path, WinAPI.FILE_ATTRIBUTE_NORMAL, out shInfo, (uint) Marshal.SizeOf(shInfo), vFlags);
         }
 
         #endregion

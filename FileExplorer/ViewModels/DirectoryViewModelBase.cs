@@ -58,6 +58,7 @@ namespace FileExplorer.ViewModels
 
         private bool _isSelected;
         private AsyncLoadCollection<IDirectoryViewModel> _subDirectories;
+        private ImageSource _icon;
 
         public bool IsSelected
         {
@@ -92,9 +93,13 @@ namespace FileExplorer.ViewModels
 
         public ImageSource Icon
         {
+            protected set
+            {
+                _icon = value; 
+            }
             get
             {
-                return _nativeSystemInfo.Icon;
+                return _icon?? _nativeSystemInfo.Icon; 
             }
         }
 
@@ -109,7 +114,6 @@ namespace FileExplorer.ViewModels
             Parent = parent;
             OpenCommand = new RelayCommand(Open);
             Size = -1;
-
         }
 
         private void SubDirectories_LoadingError(object sender, System.IO.ErrorEventArgs e)
@@ -130,8 +134,8 @@ namespace FileExplorer.ViewModels
                 return;
             }
             _isOpening = true;
-            LoadAll();
             OnOpenDirectory(this);
+            LoadAll();
         }
 
         public void LoadAll()
@@ -148,6 +152,13 @@ namespace FileExplorer.ViewModels
         {
             if(SubDirectories.IsLoaded)
                 HasItems = SubDirectories.HasItems;
+        }
+        /// <summary>
+        /// Update icon,size,last modification
+        /// </summary>
+        public virtual void UpdateParameters()
+        {
+            
         }
 
         #endregion

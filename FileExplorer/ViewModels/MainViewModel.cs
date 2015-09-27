@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Windows.Threading;
 using FileExplorer.DirectoriesHelpers;
 using FileExplorer.Helpers;
@@ -38,8 +36,14 @@ namespace FileExplorer.ViewModels
             _pathHelper = new PathHelper(root);
             Top = new TopViewModel(_pathHelper);
             Top.SelectedDirectory = root;
-            DirectoryViewModelBase.OpenDirectory += DirectoryViewModelBase_OpenDirectory;
 
+            DirectoryViewModelBase.OpenDirectory += DirectoryViewModelBase_OpenDirectory;
+            root.SubDirectories.CollectionLoaded += SubDirectories_CollectionLoaded;
+
+        }
+
+        private void SubDirectories_CollectionLoaded(object sender, EventArgs e)
+        {
             foreach (var drive in DriveInfo.GetDrives())
             {
                 if (!drive.IsReady) return;
@@ -95,7 +99,7 @@ namespace FileExplorer.ViewModels
                         {
                             if(parent==null) return;
                             index = parent.SubDirectories.IndexOf(child);
-                            var newDirectory = new DirectoryViewModel(new DirectoryInfo(e.FullPath), child.Parent);
+                            var newDirectory = new DirectoryViewModel(new DirectoryInfo(e.FullPath), parent);
                             parent.SubDirectories[index] = newDirectory;
                             if (child != null)
                             {
@@ -106,7 +110,6 @@ namespace FileExplorer.ViewModels
                             {
                                 Top.SelectedDirectory = newDirectory;
                             }
-
                         }
                         break;
 

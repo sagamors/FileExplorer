@@ -194,7 +194,7 @@ namespace FileExplorer.DirectoriesHelpers
             HasSubFolder = Convert.ToBoolean(uFlags & WinAPI.SFGAOF.SFGAO_HASSUBFOLDER);
             // Now we want to get extended attributes such as the icon index etc.
             shInfo = new WinAPI.SHFILEINFO();
-            WinAPI.SHGetFileInfo(_pIDL, 0, out shInfo, (uint) Marshal.SizeOf(shInfo), vFlags);
+            WinAPI.SHGetFileInfo(_pIDL, WinAPI.FILE_ATTRIBUTE_NORMAL, out shInfo, (uint) Marshal.SizeOf(shInfo), vFlags);
             DisplayName = shInfo.szDisplayName;
             TypeName = shInfo.szTypeName;
             IconIndex = shInfo.iIcon;

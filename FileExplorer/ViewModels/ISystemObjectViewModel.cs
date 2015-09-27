@@ -17,6 +17,6 @@ namespace FileExplorer.ViewModels
         bool IsSelected { get; set; }
         ImageSource Icon { get; }
         void Open();
-
+        void UpdateParameters();
     }
 }

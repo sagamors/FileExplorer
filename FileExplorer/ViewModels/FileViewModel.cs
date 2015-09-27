@@ -18,9 +18,14 @@ namespace FileExplorer.ViewModels
 
         #region public properties
 
+        private DateTime? _lastModificationDate;
+        private ImageSource _icon;
+  
+
         public DateTime? LastModificationDate
         {
-            get { return FileInfo.LastWriteTime; }
+            get { return _lastModificationDate??(_lastModificationDate =FileInfo.LastWriteTime); }
+            private set { _lastModificationDate = value; }
         }
 
         public string Path { get; }
@@ -40,9 +45,11 @@ namespace FileExplorer.ViewModels
             }
         }
 
+        private long? _size;
         public long Size
         {
-            get { return FileInfo.Length; }
+            private set { _size = value; }
+            get { return _size ?? (_size = FileInfo.Length).Value; }
         }
 
         public FileInfo FileInfo { get; }
@@ -54,14 +61,8 @@ namespace FileExplorer.ViewModels
 
         public ImageSource Icon
         {
-            get
-            {
-                if (_nativeFileInfo == null)
-                {
-                    _nativeFileInfo = new NativeFileInfo(FileInfo.FullName);
-                }
-                return _nativeFileInfo.Icon;
-            }
+            private set { _icon = value; }
+            get { return _icon?? _nativeFileInfo.Icon; }
         }
 
         #endregion
@@ -73,6 +74,7 @@ namespace FileExplorer.ViewModels
             FileInfo = fileInfo;
             Path = VisualPath = fileInfo.FullName;
             OpenCommand = new RelayCommand(() => Open());
+            _nativeFileInfo = new NativeFileInfo(FileInfo.FullName);
         }
 
         #endregion
@@ -82,6 +84,13 @@ namespace FileExplorer.ViewModels
         public void Open()
         {
             Process.Start(Path);
+        }
+
+        public void UpdateParameters()
+        {
+            Icon = _nativeFileInfo.Icon;
+            Size = FileInfo.Length;
+            LastModificationDate = FileInfo.LastWriteTime;
         }
 
         #endregion

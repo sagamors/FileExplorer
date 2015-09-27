@@ -59,6 +59,11 @@ namespace FileExplorer.ViewModels
             HasItems = SubDirectories.Count != 0;
         }
 
+        public override sealed void UpdateParameters()
+        {
+            Icon = _nativeSystemInfo.Icon;
+        }
+
         #endregion
 
     }

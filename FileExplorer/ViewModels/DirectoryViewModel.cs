@@ -22,15 +22,17 @@ namespace FileExplorer.ViewModels
         { 
             _directoryInfo = directoryInfo;
             var directoryProvider = new SubDirectoriesProvider(_directoryInfo, this);
-            Path = _directoryInfo.FullName;
-            LastModificationDate = directoryInfo.LastWriteTime;
-            DisplayName = _directoryInfo.Name;
+            Path = Environment.ExpandEnvironmentVariables(_directoryInfo.FullName);
+
+            DisplayName = Environment.ExpandEnvironmentVariables(_directoryInfo.Name);
             if (Parent != null)
                 VisualPath = Parent.VisualPath + "\\" + DisplayName;
             Files = new AsyncLoadCollection<ISystemObjectViewModel>(new FilesProvider(directoryInfo));
             SubDirectories = new AsyncLoadCollection<IDirectoryViewModel>(directoryProvider);
             Children = new UnionCollectionEx<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel>(
                     SubDirectories, Files);
+
+            //UpdateParameters();
             try
             {
                 UpdateHasItems();
@@ -51,6 +53,12 @@ namespace FileExplorer.ViewModels
            var directory= _directoryInfo.EnumerateDirectories()
                 .FirstOrDefault(info => ((info.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden));
             HasItems = directory!=null;
+        }
+
+        public override sealed void UpdateParameters()
+        {
+            Icon = _nativeSystemInfo.Icon;
+            LastModificationDate = _directoryInfo.LastWriteTime;
         }
 
         #endregion
