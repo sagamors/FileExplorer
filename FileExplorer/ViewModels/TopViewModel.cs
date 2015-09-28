@@ -14,6 +14,7 @@ namespace FileExplorer.ViewModels
 {
     public class TopViewModel : ViewModelBase
     {
+        private readonly DirectoryWatcher _directoryWatcher;
         public PathHelper PathHelper {private get; set; }
 
         #region private fields
@@ -22,8 +23,10 @@ namespace FileExplorer.ViewModels
         private int _positionHistory = -1;
         private Dispatcher _dispatcher;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
         private bool _currentPathBroken;
         private bool _fromHistory;
+
         #endregion
 
         #region public properties
@@ -65,19 +68,36 @@ namespace FileExplorer.ViewModels
             get { return _selectedDirectory; }
         }
 
-        public event EventHandler<TopViewModel.SelectedDirectoryChangedArgs> SelectedDirectoryChanged;
+        public event EventHandler<SelectedDirectoryChangedArgs> SelectedDirectoryChanged;
 
         #endregion
 
         #region constructors
 
-        public TopViewModel(PathHelper pathHelper)
+        public TopViewModel(PathHelper pathHelper, DirectoryWatcher directoryWatcher)
         {
+            _directoryWatcher = directoryWatcher;
             _dispatcher = Dispatcher.CurrentDispatcher;
             PathHelper = pathHelper;
             NewPathSetCommand = new RelayCommand(OnCurrentPathSet);
             BackwardCommand = new RelayCommand(() => BackwardNavigation(), o => _positionHistory > 0);
             ForwardCommand = new RelayCommand(() => ForwardNavigation(), o => _positionHistory < history.Count - 1);
+
+            DirectoryViewModelBase.OpenDirectory += DirectoryViewModelBase_OpenDirectory;
+            DirectoryViewModelBase.NoExistDirectory += DirectoryViewModelBaseOnNoExistDirectory;
+
+        }
+
+        private void DirectoryViewModelBaseOnNoExistDirectory(object sender, DirectoryViewModelBase.NoExistDirectoryArgs e)
+        {
+            var directory = PathHelper.GetFirsExistDirectory(e.Directory);
+            e.Directory.Parent.SubDirectories.Remove();
+            _directoryWatcher.DeleteFileSystemWatcher(e.Directory);
+        }
+
+        private void DirectoryViewModelBase_OpenDirectory(object sender, DirectoryViewModelBase.OpenDirectoryArgs e)
+        {
+            SelectedDirectory = e.Directory;
         }
 
         #endregion
@@ -132,6 +152,8 @@ namespace FileExplorer.ViewModels
             });
         }
 
+
+
         private void OnCurrentPathSet()
         {
             _cancellationTokenSource.Cancel();
@@ -145,8 +167,16 @@ namespace FileExplorer.ViewModels
                     {
                         child.Wait();
                     }
-                    catch (AggregateException)
+                    catch (AggregateException ex)
                     {
+                        if (ex.InnerExceptions.FirstOrDefault(exception => exception.GetType() == typeof(OperationCanceledException)) != null) return;
+                        if (!_currentPathBroken)
+                        {
+                            _currentPathBroken = true;
+                            _positionHistory--;
+                            ClearAfterPosition();
+                        }
+                        MessageBoxService.Instance.ShowError(ex.InnerExceptions.OfType<Exception>().First().Message);
                         return;
                     }
 
@@ -190,7 +220,6 @@ namespace FileExplorer.ViewModels
                             ClearAfterPosition();
                         }
                         MessageBoxService.Instance.ShowError(ex.InnerExceptions.OfType<Exception>().First().Message); 
-                        //todo
                         return;
                     }
 

@@ -17,10 +17,7 @@ namespace FileExplorer.ViewModels
         ImageSource Icon { get; }
         void Open();
         void UpdateParameters();
-    }
-
-    public interface IFileViewModel : ISystemObjectViewModel
-    {
         long Size { get; }
     }
+
 }

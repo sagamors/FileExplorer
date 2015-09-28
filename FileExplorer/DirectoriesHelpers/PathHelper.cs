@@ -4,17 +4,18 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FileExplorer.Exceptions;
 using FileExplorer.ViewModels;
 
 namespace FileExplorer.DirectoriesHelpers
 {
     public class PathHelper
     {
-        private readonly IDirectoryViewModel _root;
+        public IDirectoryViewModel Root { private get; set; }
 
         public PathHelper(IDirectoryViewModel root)
         {
-            _root = root;
+            Root = root;
         }
 
         public Task<IDirectoryViewModel> GetAndLoadDirectory(string path, CancellationToken token)
@@ -23,11 +24,11 @@ namespace FileExplorer.DirectoriesHelpers
             {
                 IDirectoryViewModel child = null;
                 IDirectoryViewModel findedParent = null;
-                child = _root;
+                child = Root;
 
                 //check first 
                 string trimedPath = Trim(path);
-                bool isVisualPath = Contains(trimedPath, Trim(_root.VisualPath));
+                bool isVisualPath = Contains(trimedPath, Trim(Root.VisualPath));
                 while (Trim(child.VisualPath) != trimedPath)
                 {
                     if (!child.SubDirectories.IsLoaded)
@@ -44,10 +45,10 @@ namespace FileExplorer.DirectoriesHelpers
 
                 if (isVisualPath || !Directory.Exists(trimedPath))
                 {
-                    throw new Exception("Directory does exist");
+                    throw new DirectoryDoesExistException();
                 }
 
-                child = _root;
+                child = Root;
 
                 while (NormalizePath(child.Path) != NormalizePath(path))
                 {
@@ -67,7 +68,7 @@ namespace FileExplorer.DirectoriesHelpers
         {
             IDirectoryViewModel child = null;
             IDirectoryViewModel findedParent = null;
-            findedParent = _root;
+            findedParent = Root;
             child = findedParent;
             parent = null;
             do
@@ -117,7 +118,7 @@ namespace FileExplorer.DirectoriesHelpers
             return true;
         }
 
-/*        public static IList<string> GetTopDirectories(string path)
+        public static IList<string> GetTopDirectories(string path)
         {
             var splitPath = NormalizePath(path).Split(Path.DirectorySeparatorChar);
             List<string> topList = new List<string>();
@@ -127,6 +128,32 @@ namespace FileExplorer.DirectoriesHelpers
                 topList.Add(topList.Last() + Path.DirectorySeparatorChar + splitPath[i]);
             }
             return topList;
-        }*/
+        }
+
+
+        public static IDirectoryViewModel GetFirsExistDirectory(IDirectoryViewModel directory)
+        {
+
+            IDirectoryViewModel currentDirectory = directory;
+            while (currentDirectory.Parent!=null)
+            {
+                if (currentDirectory.Path == "")
+                {
+                    return currentDirectory;
+                }
+                if (Directory.Exists(currentDirectory.Path))
+                {
+                    return currentDirectory;
+                }
+                currentDirectory = currentDirectory.Parent;
+            }
+            // only this pc
+            if (currentDirectory.Path == "")
+            {
+                return currentDirectory;
+            }
+        
+            return null;
+        }
     }
 }

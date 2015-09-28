@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading;
-using System.Windows;
 using FileExplorer.CustomCollections;
 using FileExplorer.DirectoriesHelpers;
+using FileExplorer.Helpers;
 using FileExplorer.ViewModels;
 
 namespace FileExplorer.Providers
 {
-    class NativeSubDirectoryProvider : ItemsProviderBase<IDirectoryViewModel>
+    internal class NativeSubDirectoryProvider : ItemsProviderBase<IDirectoryViewModel>
     {
         private readonly NativeDirectoryInfo _systemInfo;
         public IDirectoryViewModel Parent { get; }
@@ -19,25 +20,26 @@ namespace FileExplorer.Providers
             Parent = parent;
         }
 
-        public override ObservableCollection<IDirectoryViewModel> GetItems(IProgress<int> progress, CancellationToken token)
+        public override ObservableCollection<IDirectoryViewModel> GetItems(IProgress<int> progress,CancellationToken token)
         {
             ObservableCollection<IDirectoryViewModel> _collection = new ObservableCollection<IDirectoryViewModel>();
-            var directories2 = _systemInfo.GetDirectories();
-            int length = directories2.Count;
+            var directories = _systemInfo.GetDirectories();
+            int length = directories.Count;
             OnCountLoaded(length);
             double delta = 100.0 / length;
             for (int index = 0; index < length; index++)
             {
+              
                 token.ThrowIfCancellationRequested();
-                var info = directories2[index];
-        
-                Application.Current.Dispatcher.Invoke(() =>
+                var info = directories[index];
+                var directory= new RootDirectoryViewModel(info, Parent);
+                DriveInfo drive = DriveInfoEx.IsDrive(directory.Path);
+                if (drive.IsReady)
                 {
-                    var newDirectory = new RootDirectoryViewModel(info, Parent);
-                    _collection.Add(newDirectory);
-                });
-    
-                progress.Report((int)((index + 1) * delta));
+                    _collection.Add(directory);
+                }
+                
+                progress.Report((int) ((index + 1) * delta));
             }
             return _collection;
         }

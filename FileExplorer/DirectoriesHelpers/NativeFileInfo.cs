@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Windows.Media;
 using FileExplorer.Helpers;
 
@@ -18,7 +16,7 @@ namespace FileExplorer.DirectoriesHelpers
             WinAPI.SHGFI.SHGFI_DISPLAYNAME |
             WinAPI.SHGFI.SHGFI_USEFILEATTRIBUTES;
 
-        private const  WinAPI.SHGFI imageFlags = WinAPI.SHGFI.SHGFI_ICON | WinAPI.SHGFI.SHGFI_SMALLICON;
+        private const WinAPI.SHGFI imageFlags = WinAPI.SHGFI.SHGFI_ICON | WinAPI.SHGFI.SHGFI_SMALLICON;
 
         #endregion
 
@@ -47,11 +45,16 @@ namespace FileExplorer.DirectoriesHelpers
             {
                 if (_icon == null)
                 {
-                    _icon = IconExtractor.GetIcon(Path, IconIndex);
+                    if(IsDirectory)
+                        _icon = IconExtractor.GetDirectoryIcon(Path, IconIndex);
+                    else
+                        _icon = IconExtractor.GetFileIcon(Path, IconIndex);
                 }
                 return _icon;
             }
         }
+
+        public bool IsDirectory { get; }
 
         #endregion Public properties
 
@@ -61,10 +64,14 @@ namespace FileExplorer.DirectoriesHelpers
         {
             Path = path;
             shInfo = new WinAPI.SHFILEINFO();
-            WinAPI.SHGetFileInfo(path, WinAPI.FILE_ATTRIBUTE_NORMAL, out shInfo, (uint) Marshal.SizeOf(shInfo), vFlags);
+            WinAPI.SHGetFileInfo(path, WinAPI.FILE_ATTRIBUTE_NORMAL, out shInfo, (uint)Marshal.SizeOf(shInfo), vFlags);
+        }
+
+        public NativeFileInfo(string path, bool isDirectory) : this(path)
+        {
+            IsDirectory = isDirectory;
         }
 
         #endregion
-
     }
 }

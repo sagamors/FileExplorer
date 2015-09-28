@@ -1,16 +1,16 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Windows.Input;
 using System.Windows.Media;
 using FileExplorer.CustomCollections;
 using FileExplorer.DirectoriesHelpers;
+using FileExplorer.Exceptions;
 using FileExplorer.Helpers;
 using FileExplorer.Services;
 
 namespace FileExplorer.ViewModels
 {
-    public class DirectoryViewModelBase : ViewModelBase, IDirectoryViewModel
+    public abstract class DirectoryViewModelBase : ViewModelBase, IDirectoryViewModel
     {
         private bool _isOpening;
 
@@ -19,11 +19,24 @@ namespace FileExplorer.ViewModels
         public class OpenDirectoryArgs
         {
             public IDirectoryViewModel Directory { get; }
+            public bool Cancel { get; set; }
             public OpenDirectoryArgs(IDirectoryViewModel directory)
             {
                 Directory = directory;
             }
         }
+
+        public class NoExistDirectoryArgs
+        {
+            public IDirectoryViewModel Directory { get; }
+            public NoExistDirectoryArgs(IDirectoryViewModel directory)
+            {
+                Directory = directory;
+            }
+        }
+
+        public static event EventHandler<NoExistDirectoryArgs> NoExistDirectory;
+
 
         #region private fields
 
@@ -108,6 +121,7 @@ namespace FileExplorer.ViewModels
             NativeSystemInfo = nativeSystemInfo;
             Parent = parent;
             OpenCommand = new RelayCommand(Open);
+            Size = -1;
         }
 
         private void SubDirectories_LoadingError(object sender, System.IO.ErrorEventArgs e)
@@ -122,14 +136,26 @@ namespace FileExplorer.ViewModels
 
         public void Open()
         {
-            if (NoAccess)
+            try
             {
-                MessageBoxService.Instance.ShowError("Access to the directory is denied");
-                return;
+                if (NoAccess)
+                {
+                    MessageBoxService.Instance.ShowError("Access to the directory is denied");
+                    return;
+                }
+                _isOpening = true;
+                if (OnOpenDirectory(this)) return;
+                LoadAll();
             }
-            _isOpening = true;
-            OnOpenDirectory(this);
-            LoadAll();
+            catch (Exception ex)
+            {
+                var existDirectory = PathHelper.GetFirsExistDirectory(this);
+                MessageBoxService.Instance.ShowError(ex.Message);
+                if (existDirectory!=null)
+                {
+                    if (OnOpenDirectory(existDirectory)) return;
+                }
+            }
         }
 
         public void LoadAll()
@@ -150,19 +176,31 @@ namespace FileExplorer.ViewModels
 
         public FileSystemWatcher FileSystemWatcher { get; set; }
 
+        public long Size { private set;get; }
+
         /// <summary>
         /// Update icon,size,last modification
         /// </summary>
-        public virtual void UpdateParameters()
-        {
-            
-        }
+        public abstract void UpdateParameters();
 
         #endregion
 
-        private static void OnOpenDirectory(IDirectoryViewModel e)
+        public static bool OnOpenDirectory(IDirectoryViewModel e)
         {
-            OpenDirectory?.Invoke(null, new OpenDirectoryArgs(e));
+            var args = new OpenDirectoryArgs(e);
+            if (e.Path != "" && !Directory.Exists(e.Path))
+            {
+                OnNoExistDirectory(e);
+                throw new DirectoryDoesExistException();
+            }
+            OpenDirectory?.Invoke(null, args);
+            return args.Cancel;
+        }
+
+
+        public static void OnNoExistDirectory(IDirectoryViewModel directoryViewModel)
+        {
+            NoExistDirectory?.Invoke(null, new NoExistDirectoryArgs(directoryViewModel));
         }
     }
 }

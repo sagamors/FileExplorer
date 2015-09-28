@@ -231,7 +231,7 @@ namespace FileExplorer.Helpers
             }
         }
 
-        private void DeleteFileSystemWatcher(IDirectoryViewModel directoryViewModel)
+        public void DeleteFileSystemWatcher(IDirectoryViewModel directoryViewModel)
         {
             directoryViewModel.FileSystemWatcher.EnableRaisingEvents = false;
             directoryViewModel.FileSystemWatcher.Dispose();

@@ -79,6 +79,8 @@
     <Compile Include="CustomCollections\IItemsProvider.cs" />
     <Compile Include="CustomCollections\IObservableCollection.cs" />
     <Compile Include="CustomCollections\UnionCollectionEx.cs" />
+    <Compile Include="Exceptions\DirectoryDoesExistException.cs" />
+    <Compile Include="Exceptions\FileDoesExistException.cs" />
     <Compile Include="Helpers\DirectoryWatcher.cs" />
     <Compile Include="Helpers\DriveInfoEx.cs" />
     <Compile Include="Helpers\TemplateSelector.cs" />

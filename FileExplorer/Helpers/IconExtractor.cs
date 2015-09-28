@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Text;
+
 namespace FileExplorer.Helpers
 {
     public static class IconExtractor
@@ -34,11 +31,10 @@ namespace FileExplorer.Helpers
 
         public static Dictionary<int, ImageSource> IconsDictionary { get; } = new Dictionary<int, ImageSource>();
 
-        public static ImageSource GetIcon(string path, int iconIndex, IconSize size = IconSize.Small)
+        public static ImageSource GetDirectoryIcon(string path, int iconIndex, IconSize size = IconSize.Small)
         {
-            try
-            {
                 ImageSource imageSource = null;
+                
                 if (IconsDictionary.TryGetValue(iconIndex, out imageSource))
                 {
                     return imageSource;
@@ -59,9 +55,6 @@ namespace FileExplorer.Helpers
                 WinAPI.SHGetFileInfo(path, 256, out shfileinfo, (uint) Marshal.SizeOf(shfileinfo), flags);
                 if (shfileinfo.hIcon == IntPtr.Zero)
                 {
-                    //todo
-                    Console.WriteLine("icon:"+iconIndex);
-                    return null;
                     return GetIcon(path);
                 }
                 imageSource = Imaging.CreateBitmapSourceFromHIcon(shfileinfo.hIcon, sizeRect,
@@ -71,14 +64,19 @@ namespace FileExplorer.Helpers
                 shfileinfo.hIcon = IntPtr.Zero;
 
                 return imageSource;
-            }
-            catch (Exception ex)
-            {
-                //todo
-                Console.WriteLine("2" + ex);
-                return null;
-            }
         }
+
+        public static ImageSource GetFileIcon(string path, int iconIndex, IconSize size = IconSize.Small)
+        {
+            ImageSource imageSource = null;
+            if(iconIndex == 0)
+            {
+                return GetIcon(path);
+            }
+
+            return GetDirectoryIcon(path, iconIndex, size);
+        }
+
 
         public static ImageSource GetIcon(IntPtr pIDL, int iconIndex, IconSize size = IconSize.Small)
         {

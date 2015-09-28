@@ -4,11 +4,13 @@ using System.IO;
 using System.Windows.Input;
 using System.Windows.Media;
 using FileExplorer.DirectoriesHelpers;
+using FileExplorer.Exceptions;
 using FileExplorer.Helpers;
+using FileExplorer.Services;
 
 namespace FileExplorer.ViewModels
 {
-    public class FileViewModel : ViewModelBase, IFileViewModel
+    public class FileViewModel : ViewModelBase, ISystemObjectViewModel
     {
         #region private fields
 
@@ -24,7 +26,7 @@ namespace FileExplorer.ViewModels
 
         public DateTime? LastModificationDate
         {
-            get { return _lastModificationDate??(_lastModificationDate =FileInfo.LastWriteTime); }
+            get { return _lastModificationDate??(_lastModificationDate =Info.LastWriteTime); }
             private set { _lastModificationDate = value; }
         }
 
@@ -39,7 +41,7 @@ namespace FileExplorer.ViewModels
             {
                 if (_nativeFileInfo == null)
                 {
-                    _nativeFileInfo = new NativeFileInfo(FileInfo.FullName);
+                    _nativeFileInfo = new NativeFileInfo(Info.FullName);
                 }
                 return _nativeFileInfo.TypeName;
             }
@@ -49,14 +51,14 @@ namespace FileExplorer.ViewModels
         public long Size
         {
             private set { _size = value; }
-            get { return _size ?? (_size = FileInfo.Length).Value; }
+            get { return _size ?? (_size = Info.Length).Value; }
         }
 
-        public FileInfo FileInfo { get; }
+        public FileInfo Info { get; }
 
         public string DisplayName
         {
-            get { return FileInfo.Name; }
+            get { return Info.Name; }
         }
 
         public ImageSource Icon
@@ -69,12 +71,12 @@ namespace FileExplorer.ViewModels
 
         #region constructors
 
-        public FileViewModel(FileInfo fileInfo)
+        public FileViewModel(FileInfo info)
         {
-            FileInfo = fileInfo;
-            Path = VisualPath = fileInfo.FullName;
+            Info = info;
+            Path = VisualPath = info.FullName;
             OpenCommand = new RelayCommand(() => Open());
-            _nativeFileInfo = new NativeFileInfo(FileInfo.FullName);
+            _nativeFileInfo = new NativeFileInfo(Info.FullName);
         }
 
         #endregion
@@ -83,15 +85,19 @@ namespace FileExplorer.ViewModels
 
         public void Open()
         {
+            if (!File.Exists(Path))
+            {
+                MessageBoxService.Instance.ShowError(FileDoesExistException.Msg);
+            }
             Process.Start(Path);
         }
 
         public void UpdateParameters()
         {
-            _nativeFileInfo = new NativeFileInfo(FileInfo.FullName);
+            _nativeFileInfo = new NativeFileInfo(Info.FullName);
             Icon = _nativeFileInfo.Icon;
-            Size = FileInfo.Length;
-            LastModificationDate = FileInfo.LastWriteTime;
+            Size = Info.Length;
+            LastModificationDate = Info.LastWriteTime;
         }
 
         #endregion

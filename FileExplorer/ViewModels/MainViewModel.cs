@@ -34,16 +34,9 @@ namespace FileExplorer.ViewModels
             var root = new RootDirectoryViewModel();
             Items.Add(root);
             _pathHelper = new PathHelper(root);
-            Top = new TopViewModel(_pathHelper);
+            _directoryWatcher = new DirectoryWatcher(Top, root, _pathHelper, Dispatcher.CurrentDispatcher);
+            Top = new TopViewModel(_pathHelper, _directoryWatcher);
             Top.SelectedDirectory = root;
-
-            DirectoryViewModelBase.OpenDirectory += DirectoryViewModelBase_OpenDirectory;
-            _directoryWatcher = new DirectoryWatcher(Top,root,_pathHelper,Dispatcher.CurrentDispatcher);
-        }
-
-        private void DirectoryViewModelBase_OpenDirectory(object sender, DirectoryViewModelBase.OpenDirectoryArgs e)
-        {
-            Top.SelectedDirectory = e.Directory;
         }
 
         #endregion

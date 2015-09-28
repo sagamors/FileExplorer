@@ -20,7 +20,7 @@ namespace FileExplorer.ViewModels
         #region constructor
 
         public DirectoryViewModel(DirectoryInfo directoryInfo, IDirectoryViewModel parent)
-            : base(new NativeFileInfo(directoryInfo.FullName), parent)
+            : base(new NativeFileInfo(directoryInfo.FullName,true), parent)
         {
             _directoryInfo = directoryInfo;
             var directoryProvider = new SubDirectoriesProvider(_directoryInfo, this);
@@ -56,7 +56,7 @@ namespace FileExplorer.ViewModels
         public override sealed void UpdateParameters()
         {
             NativeSystemInfo = new NativeFileInfo(Path);
-            Icon =  IconExtractor.GetIcon(Path, NativeSystemInfo.IconIndex);
+            Icon =  IconExtractor.GetDirectoryIcon(Path, NativeSystemInfo.IconIndex);
             _directoryInfo = new DirectoryInfo(Path);
             LastModificationDate = _directoryInfo.LastWriteTime;
         }

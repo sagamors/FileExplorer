@@ -21,10 +21,10 @@ namespace FileExplorer.Helpers
         [DllImport("shell32.dll")]
         public static extern Int32 SHGetDesktopFolder(ref IShellFolder ppshf);
 
-        [DllImport("shell32.dll")]
+        [DllImport("shell32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SHGetFileInfo(string pszPath, uint dwFileAttribs, out SHFILEINFO psfi, uint cbFileInfo, SHGFI uFlags);
 
-        [DllImport("shell32.dll")]
+        [DllImport("shell32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SHGetFileInfo(IntPtr pIDL, uint dwFileAttributes, out SHFILEINFO psfi, uint cbFileInfo, SHGFI uFlags);
 
         [DllImport("shell32.dll")]
@@ -150,7 +150,7 @@ namespace FileExplorer.Helpers
 
         #region Structures
 
-   //     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct SHFILEINFO
         {
             public IntPtr hIcon;
