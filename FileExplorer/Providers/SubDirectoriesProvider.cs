@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq.Expressions;
 using System.Threading;
 using FileExplorer.CustomCollections;
 using FileExplorer.ViewModels;

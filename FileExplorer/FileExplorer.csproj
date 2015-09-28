@@ -79,6 +79,7 @@
     <Compile Include="CustomCollections\IItemsProvider.cs" />
     <Compile Include="CustomCollections\IObservableCollection.cs" />
     <Compile Include="CustomCollections\UnionCollectionEx.cs" />
+    <Compile Include="Exceptions\AccessDirectoryDeniedException.cs" />
     <Compile Include="Exceptions\DirectoryDoesExistException.cs" />
     <Compile Include="Exceptions\FileDoesExistException.cs" />
     <Compile Include="Helpers\DirectoryWatcher.cs" />

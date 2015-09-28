@@ -59,7 +59,6 @@ namespace FileExplorer.DirectoriesHelpers
                     }
                     findedParent = child;
                     child = findedParent.SubDirectories.First(model => Contains(NormalizePath(path), NormalizePath(model.Path)));
-                /*    child.IsExpanded = true;*/
                 }
                 return child;
             }, token);

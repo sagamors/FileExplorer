@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
 using FileExplorer.DirectoriesHelpers;
+using FileExplorer.Exceptions;
 using FileExplorer.Helpers;
 using FileExplorer.Services;
 
@@ -13,10 +14,22 @@ namespace FileExplorer.ViewModels
 {
     public class TopViewModel : ViewModelBase
     {
-        private readonly DirectoryWatcher _directoryWatcher;
         public PathHelper PathHelper {private get; set; }
 
         #region private fields
+
+        private class Hystory
+        {
+            public string VisualPath { get; set; }
+            public string Path { get; set; }
+
+            public Hystory(string visualPath, string path)
+            {
+                VisualPath = visualPath;
+                Path = path;
+            }
+
+        }
 
         private List<string> history = new List<string>();
 
@@ -71,9 +84,8 @@ namespace FileExplorer.ViewModels
 
         #region constructors
 
-        public TopViewModel(PathHelper pathHelper, DirectoryWatcher directoryWatcher)
+        public TopViewModel(PathHelper pathHelper)
         {
-            _directoryWatcher = directoryWatcher;
             _dispatcher = Dispatcher.CurrentDispatcher;
             PathHelper = pathHelper;
             NewPathSetCommand = new RelayCommand(OnCurrentPathSet);
@@ -173,9 +185,15 @@ namespace FileExplorer.ViewModels
                     {
                         return;
                     }
-
                     if (child.IsFaulted)
                         throw child.Exception;
+
+                    if (child.Result.NoAccess)
+                    {
+                        MessageBoxService.Instance.ShowError(AccessDirectoryDeniedException.Msg);
+                        return;
+                    }
+
                     if (SelectedDirectory.VisualPath == child.Result.VisualPath ) return;
                     SelectedDirectory = child.Result;
                     AddToHistory(CurrentPath);
@@ -219,6 +237,12 @@ namespace FileExplorer.ViewModels
 
                     if (child.IsFaulted)
                         throw child.Exception;
+
+                    if (child.Result.NoAccess)
+                    {
+                        MessageBoxService.Instance.ShowError(AccessDirectoryDeniedException.Msg);
+                        return;
+                    }
 
                     if (CurrentPath == child.Result.VisualPath) return;
                     if (CurrentPath == child.Result.Path)

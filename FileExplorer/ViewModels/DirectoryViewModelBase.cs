@@ -140,7 +140,7 @@ namespace FileExplorer.ViewModels
             {
                 if (NoAccess)
                 {
-                    MessageBoxService.Instance.ShowError("Access to the directory is denied");
+                    MessageBoxService.Instance.ShowError(AccessDirectoryDeniedException.Msg);
                     return;
                 }
                 _isOpening = true;
