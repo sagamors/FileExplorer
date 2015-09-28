@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Input;
@@ -88,20 +89,28 @@ namespace FileExplorer.ViewModels
 
         public void Open()
         {
-            if (!File.Exists(Path))
+            try
             {
-                if (Directory.Exists(Parent.Path))
+                if (!File.Exists(Path))
                 {
-                    Parent.Files.Remove(this);
+                    if (Directory.Exists(Parent.Path))
+                    {
+                        Parent.Files.Remove(this);
+                    }
+                    else
+                    {
+                        DirectoryViewModelBase.OnNoExistDirectory(Parent);
+                    }
+                    MessageBoxService.Instance.ShowError(FileDoesExistException.Msg);
+                    return;
                 }
-                else
-                {
-                    DirectoryViewModelBase.OnNoExistDirectory(Parent);
-                }
-                MessageBoxService.Instance.ShowError(FileDoesExistException.Msg);
-                return;
+                Process.Start(Path);
             }
-            Process.Start(Path);
+            //operation was canceled user
+            catch (Win32Exception)
+            {
+                
+            }
         }
 
         public void UpdateParameters()
