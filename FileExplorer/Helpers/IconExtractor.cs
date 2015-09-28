@@ -56,10 +56,12 @@ namespace FileExplorer.Helpers
                     sizeRect = new Int32Rect(0, 0, 32, 32);
                 }
                 WinAPI.SHFILEINFO shfileinfo = new WinAPI.SHFILEINFO();
-                WinAPI.SHGetFileInfo(path, 0, out shfileinfo, (uint) Marshal.SizeOf(shfileinfo), flags);
+                WinAPI.SHGetFileInfo(path, 256, out shfileinfo, (uint) Marshal.SizeOf(shfileinfo), flags);
                 if (shfileinfo.hIcon == IntPtr.Zero)
                 {
+                    //todo
                     Console.WriteLine("icon:"+iconIndex);
+                    return null;
                     return GetIcon(path);
                 }
                 imageSource = Imaging.CreateBitmapSourceFromHIcon(shfileinfo.hIcon, sizeRect,
@@ -72,11 +74,11 @@ namespace FileExplorer.Helpers
             }
             catch (Exception ex)
             {
+                //todo
                 Console.WriteLine("2" + ex);
                 return null;
             }
         }
-
 
         public static ImageSource GetIcon(IntPtr pIDL, int iconIndex, IconSize size = IconSize.Small)
         {
@@ -99,7 +101,7 @@ namespace FileExplorer.Helpers
             }
 
             WinAPI.SHFILEINFO shfileinfo = new WinAPI.SHFILEINFO();
-            WinAPI.SHGetFileInfo(pIDL, 0, out shfileinfo, (uint)Marshal.SizeOf(shfileinfo), WinAPI.SHGFI.SHGFI_SYSICONINDEX | WinAPI.SHGFI.SHGFI_PIDL| flags);
+            WinAPI.SHGetFileInfo(pIDL, 256, out shfileinfo, (uint)Marshal.SizeOf(shfileinfo), WinAPI.SHGFI.SHGFI_SYSICONINDEX | WinAPI.SHGFI.SHGFI_PIDL| flags);
             imageSource = Imaging.CreateBitmapSourceFromHIcon(shfileinfo.hIcon, sizeRect, BitmapSizeOptions.FromEmptyOptions());
             IconsDictionary.Add(iconIndex, imageSource);
             WinAPI.DestroyIcon(shfileinfo.hIcon);

@@ -36,7 +36,6 @@ namespace FileExplorer.Helpers
         [DllImport("shell32.dll")]
         public static extern Int32 SHGetPathFromIDList(IntPtr pIDL, StringBuilder strPath);
 
-
         [DllImport("shell32.dll")]
         public static extern IntPtr ILCreateFromPath(string  path);
 
@@ -151,6 +150,7 @@ namespace FileExplorer.Helpers
 
         #region Structures
 
+   //     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct SHFILEINFO
         {
             public IntPtr hIcon;

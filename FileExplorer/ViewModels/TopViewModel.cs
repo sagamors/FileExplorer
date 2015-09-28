@@ -46,7 +46,6 @@ namespace FileExplorer.ViewModels
         {
             set
             {
-                
                 _selectedDirectory = value;
                 if(_selectedDirectory!=null)
                     _selectedDirectory.LoadAll();

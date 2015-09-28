@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -101,7 +102,7 @@ namespace FileExplorer.DirectoriesHelpers
                     .ToUpperInvariant();
         }
 
-        public bool Contains(string source, string path)
+        public static bool Contains(string source, string path)
         {
             var splitSource = source.Split(Path.DirectorySeparatorChar);
             var splitPath = path.Split(Path.DirectorySeparatorChar);
@@ -115,5 +116,17 @@ namespace FileExplorer.DirectoriesHelpers
             }
             return true;
         }
+
+/*        public static IList<string> GetTopDirectories(string path)
+        {
+            var splitPath = NormalizePath(path).Split(Path.DirectorySeparatorChar);
+            List<string> topList = new List<string>();
+            topList.Add(splitPath[0] + Path.DirectorySeparatorChar);
+            for (int i = 1; i < splitPath.Length; i++)
+            {
+                topList.Add(topList.Last() + Path.DirectorySeparatorChar + splitPath[i]);
+            }
+            return topList;
+        }*/
     }
 }

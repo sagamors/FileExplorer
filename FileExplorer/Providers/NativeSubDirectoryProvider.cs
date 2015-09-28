@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Threading;
+using System.Windows;
 using FileExplorer.CustomCollections;
 using FileExplorer.DirectoriesHelpers;
 using FileExplorer.ViewModels;
@@ -29,7 +30,13 @@ namespace FileExplorer.Providers
             {
                 token.ThrowIfCancellationRequested();
                 var info = directories2[index];
-                _collection.Add(new RootDirectoryViewModel(info, Parent));
+        
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var newDirectory = new RootDirectoryViewModel(info, Parent);
+                    _collection.Add(newDirectory);
+                });
+    
                 progress.Report((int)((index + 1) * delta));
             }
             return _collection;

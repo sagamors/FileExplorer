@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using FileExplorer.CustomCollections;
 using FileExplorer.DirectoriesHelpers;
+using FileExplorer.Helpers;
 using FileExplorer.Providers;
 using PropertyChanged;
 
@@ -16,11 +17,10 @@ namespace FileExplorer.ViewModels
 
         public RootDirectoryViewModel() : base(new NativeDirectoryInfo(),null)
         {
-            var nativeSubDirectoryProvider = new NativeSubDirectoryProvider((NativeDirectoryInfo)_nativeSystemInfo, this);
+            var nativeSubDirectoryProvider = new NativeSubDirectoryProvider((NativeDirectoryInfo)NativeSystemInfo, this);
             var nativeFilesProvider = new NativeFilesProvider(null);
-            DisplayName = _nativeSystemInfo.DisplayName;
-            Path = _nativeSystemInfo.Path;
-            Size = -1;
+            DisplayName = NativeSystemInfo.DisplayName;
+            Path = NativeSystemInfo.Path;
             HasItems = true;
             VisualPath = DisplayName;
             SubDirectories = new AsyncLoadCollection<IDirectoryViewModel>(nativeSubDirectoryProvider);
@@ -32,14 +32,13 @@ namespace FileExplorer.ViewModels
 
         public RootDirectoryViewModel(NativeDirectoryInfo nativeDirectoryInfo, IDirectoryViewModel parent) : base(nativeDirectoryInfo, parent)
         {
-            _nativeSystemInfo = nativeDirectoryInfo;
+            NativeSystemInfo = nativeDirectoryInfo;
             var directoryUnfo = new DirectoryInfo(nativeDirectoryInfo.Path);
             var subDirectoryProvider = new SubDirectoriesProvider(directoryUnfo, this);
             var filesProvider = new FilesProvider(directoryUnfo);
             DisplayName = nativeDirectoryInfo.DisplayName;
             Path = nativeDirectoryInfo.Path;
             VisualPath = Parent.VisualPath + "\\" + DisplayName;
-            Size = -1;
             //is drive?
             DriveInfo driveInfo =  Drives.FirstOrDefault(info => PathHelper.NormalizePath(info.Name) == PathHelper.NormalizePath(Path));
             HasItems = driveInfo?.IsReady ?? directoryUnfo.EnumerateDirectories().Any();
@@ -53,15 +52,16 @@ namespace FileExplorer.ViewModels
 
         #region private methods
 
-        private void _subDirectories_CollectionChanged(object sender,
-            NotifyCollectionChangedEventArgs e)
+        private void _subDirectories_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             HasItems = SubDirectories.Count != 0;
         }
 
         public override sealed void UpdateParameters()
         {
-            Icon = _nativeSystemInfo.Icon;
+            var native = ((NativeDirectoryInfo) NativeSystemInfo);
+            NativeSystemInfo = new NativeDirectoryInfo(native.PIDL, native.Parent);
+            Icon = NativeSystemInfo.Icon;
         }
 
         #endregion

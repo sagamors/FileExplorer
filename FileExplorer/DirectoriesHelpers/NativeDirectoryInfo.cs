@@ -118,6 +118,8 @@ namespace FileExplorer.DirectoriesHelpers
             get { return _pIDL; }
         }
 
+        public NativeDirectoryInfo Parent { get; }
+
         private readonly WinAPI.IShellFolder _shellFolder;
 
         /// <summary>
@@ -177,6 +179,7 @@ namespace FileExplorer.DirectoriesHelpers
 
         public NativeDirectoryInfo(IntPtr pIDL, NativeDirectoryInfo shParent)
         {
+            Parent = shParent;
             // We need the Desktop shell item to exist first.
             if (haveRootShell == false)
                 throw new Exception("The root shell item must be created before creating a sub-item");

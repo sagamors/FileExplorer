@@ -1,4 +1,6 @@
-﻿using FileExplorer.CustomCollections;
+﻿using System.Collections.Generic;
+using System.IO;
+using FileExplorer.CustomCollections;
 
 
 namespace FileExplorer.ViewModels
@@ -14,5 +16,6 @@ namespace FileExplorer.ViewModels
         bool NoAccess { get; }
         void LoadAll();
         void UpdateHasItems();
+        FileSystemWatcher FileSystemWatcher { get; set; }
     }
 }

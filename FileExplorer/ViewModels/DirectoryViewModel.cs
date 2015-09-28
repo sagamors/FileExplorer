@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using FileExplorer.CustomCollections;
 using FileExplorer.DirectoriesHelpers;
+using FileExplorer.Helpers;
 using FileExplorer.Providers;
 
 namespace FileExplorer.ViewModels
@@ -18,21 +19,19 @@ namespace FileExplorer.ViewModels
 
         #region constructor
 
-        public DirectoryViewModel(DirectoryInfo directoryInfo, IDirectoryViewModel parent) : base(new NativeFileInfo(directoryInfo.FullName), parent)
-        { 
+        public DirectoryViewModel(DirectoryInfo directoryInfo, IDirectoryViewModel parent)
+            : base(new NativeFileInfo(directoryInfo.FullName), parent)
+        {
             _directoryInfo = directoryInfo;
             var directoryProvider = new SubDirectoriesProvider(_directoryInfo, this);
             Path = Environment.ExpandEnvironmentVariables(_directoryInfo.FullName);
-
-            DisplayName = Environment.ExpandEnvironmentVariables(_directoryInfo.Name);
+            DisplayName = _directoryInfo.Name;
             if (Parent != null)
                 VisualPath = Parent.VisualPath + "\\" + DisplayName;
             Files = new AsyncLoadCollection<ISystemObjectViewModel>(new FilesProvider(directoryInfo));
             SubDirectories = new AsyncLoadCollection<IDirectoryViewModel>(directoryProvider);
-            Children = new UnionCollectionEx<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel>(
-                    SubDirectories, Files);
-
-            //UpdateParameters();
+            Children = new UnionCollectionEx<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel>(SubDirectories, Files);
+            LastModificationDate = _directoryInfo.LastWriteTime;
             try
             {
                 UpdateHasItems();
@@ -41,7 +40,6 @@ namespace FileExplorer.ViewModels
             {
                 NoAccess = true;
             }
-
         }
 
         #endregion
@@ -57,7 +55,9 @@ namespace FileExplorer.ViewModels
 
         public override sealed void UpdateParameters()
         {
-            Icon = _nativeSystemInfo.Icon;
+            NativeSystemInfo = new NativeFileInfo(Path);
+            Icon =  IconExtractor.GetIcon(Path, NativeSystemInfo.IconIndex);
+            _directoryInfo = new DirectoryInfo(Path);
             LastModificationDate = _directoryInfo.LastWriteTime;
         }
 

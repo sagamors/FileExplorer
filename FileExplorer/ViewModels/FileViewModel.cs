@@ -8,7 +8,7 @@ using FileExplorer.Helpers;
 
 namespace FileExplorer.ViewModels
 {
-    public class FileViewModel : ViewModelBase, ISystemObjectViewModel
+    public class FileViewModel : ViewModelBase, IFileViewModel
     {
         #region private fields
 
@@ -88,6 +88,7 @@ namespace FileExplorer.ViewModels
 
         public void UpdateParameters()
         {
+            _nativeFileInfo = new NativeFileInfo(FileInfo.FullName);
             Icon = _nativeFileInfo.Icon;
             Size = FileInfo.Length;
             LastModificationDate = FileInfo.LastWriteTime;

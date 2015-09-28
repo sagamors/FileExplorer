@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq.Expressions;
 using System.Threading;
 using FileExplorer.CustomCollections;
 using FileExplorer.ViewModels;
@@ -27,25 +28,32 @@ namespace FileExplorer.Providers
             int progressCount = 0;
             for (int index = 0; index < directories.Length; index++)
             {
-                token.ThrowIfCancellationRequested();
-                var info = directories[index];
-                if ((info.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)
+                try
                 {
-                    try
+                    token.ThrowIfCancellationRequested();
+                    var info = directories[index];
+                    if ((info.Attributes & FileAttributes.Hidden) != FileAttributes.Hidden)
                     {
-                        _collection.Add(new DirectoryViewModel(info, Parent));
+                        try
+                        {                       
+                            _collection.Add(new DirectoryViewModel(info, Parent));
+                        }
+                        catch (UnauthorizedAccessException ex)
+                        {
+                            /*Debug.WriteLine(ex);*/
+                        }
                     }
-                    catch (UnauthorizedAccessException ex)
+
+                    int newProgress = (int) ((index + 1) * delta);
+                    if (newProgress - progressCount > 10)
                     {
-                        /*Debug.WriteLine(ex);*/
+                        progressCount = newProgress;
+                        progress.Report(progressCount);
                     }
                 }
-
-                int newProgress = (int)((index + 1) * delta);
-                if (newProgress - progressCount > 10)
+                catch (Exception ex)
                 {
-                    progressCount = newProgress;
-                    progress.Report(progressCount);
+                    
                 }
             }
             return _collection;

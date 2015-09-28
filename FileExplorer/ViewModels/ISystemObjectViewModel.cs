@@ -9,7 +9,6 @@ namespace FileExplorer.ViewModels
     {
         string DisplayName { get; }
         string TypeName { get; }
-        long Size { get; }
         DateTime? LastModificationDate { get; }
         string Path { get; }
         string VisualPath { get; }
@@ -18,5 +17,10 @@ namespace FileExplorer.ViewModels
         ImageSource Icon { get; }
         void Open();
         void UpdateParameters();
+    }
+
+    public interface IFileViewModel : ISystemObjectViewModel
+    {
+        long Size { get; }
     }
 }

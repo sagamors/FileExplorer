@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using FileExplorer.ViewModels;
 
 namespace FileExplorer
@@ -8,5 +9,15 @@ namespace FileExplorer
     /// </summary>
     public partial class App : Application
     {
+        public App() : base()
+        {
+            AppDomain currentDomain = AppDomain.CurrentDomain;
+            currentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+        }
+
+        private void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs unhandledExceptionEventArgs)
+        {
+            MessageBox.Show(unhandledExceptionEventArgs.ExceptionObject.ToString(), "err");
+        }
     }
 }

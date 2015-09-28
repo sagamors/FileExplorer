@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Windows.Input;
 using System.Windows.Media;
 using FileExplorer.CustomCollections;
@@ -25,7 +27,7 @@ namespace FileExplorer.ViewModels
 
         #region private fields
 
-        protected INativeSystemInfo _nativeSystemInfo;
+        protected INativeSystemInfo NativeSystemInfo { set; get; }
 
         #endregion
 
@@ -39,7 +41,7 @@ namespace FileExplorer.ViewModels
         {
             get
             {
-                return _nativeSystemInfo.TypeName;
+                return NativeSystemInfo.TypeName;
             }
         }
 
@@ -93,27 +95,19 @@ namespace FileExplorer.ViewModels
 
         public ImageSource Icon
         {
-            protected set
-            {
-                _icon = value; 
-            }
-            get
-            {
-                return _icon?? _nativeSystemInfo.Icon; 
-            }
+            protected set { _icon = value; }
+            get { return _icon?? NativeSystemInfo.Icon; }
         }
 
-        public long Size { protected set; get; }
         public DateTime? LastModificationDate { protected set; get; }
 
         public bool HasItems { protected set; get; }
 
         public DirectoryViewModelBase(INativeSystemInfo nativeSystemInfo, IDirectoryViewModel parent)
         {
-            _nativeSystemInfo = nativeSystemInfo;
+            NativeSystemInfo = nativeSystemInfo;
             Parent = parent;
             OpenCommand = new RelayCommand(Open);
-            Size = -1;
         }
 
         private void SubDirectories_LoadingError(object sender, System.IO.ErrorEventArgs e)
@@ -153,6 +147,9 @@ namespace FileExplorer.ViewModels
             if(SubDirectories.IsLoaded)
                 HasItems = SubDirectories.HasItems;
         }
+
+        public FileSystemWatcher FileSystemWatcher { get; set; }
+
         /// <summary>
         /// Update icon,size,last modification
         /// </summary>

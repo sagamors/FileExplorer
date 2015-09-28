@@ -15,7 +15,8 @@ namespace FileExplorer.DirectoriesHelpers
             WinAPI.SHGFI.SHGFI_SMALLICON |
             WinAPI.SHGFI.SHGFI_SYSICONINDEX |
             WinAPI.SHGFI.SHGFI_TYPENAME |
-            WinAPI.SHGFI.SHGFI_DISPLAYNAME;
+            WinAPI.SHGFI.SHGFI_DISPLAYNAME |
+            WinAPI.SHGFI.SHGFI_USEFILEATTRIBUTES;
 
         private const  WinAPI.SHGFI imageFlags = WinAPI.SHGFI.SHGFI_ICON | WinAPI.SHGFI.SHGFI_SMALLICON;
 
