@@ -28,7 +28,7 @@ namespace FileExplorer.ViewModels
             DisplayName = _directoryInfo.Name;
             if (Parent != null)
                 VisualPath = Parent.VisualPath + "\\" + DisplayName;
-            Files = new AsyncLoadCollection<ISystemObjectViewModel>(new FilesProvider(directoryInfo));
+            Files = new AsyncLoadCollection<ISystemObjectViewModel>(new FilesProvider(directoryInfo,this));
             SubDirectories = new AsyncLoadCollection<IDirectoryViewModel>(directoryProvider);
             Children = new UnionCollectionEx<IDirectoryViewModel, ISystemObjectViewModel, ISystemObjectViewModel>(SubDirectories, Files);
             LastModificationDate = _directoryInfo.LastWriteTime;

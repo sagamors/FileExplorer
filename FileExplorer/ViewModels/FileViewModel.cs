@@ -54,6 +54,8 @@ namespace FileExplorer.ViewModels
             get { return _size ?? (_size = Info.Length).Value; }
         }
 
+        public IDirectoryViewModel Parent { get; }
+
         public FileInfo Info { get; }
 
         public string DisplayName
@@ -71,9 +73,10 @@ namespace FileExplorer.ViewModels
 
         #region constructors
 
-        public FileViewModel(FileInfo info)
+        public FileViewModel(FileInfo info, IDirectoryViewModel parent)
         {
             Info = info;
+            Parent = parent;
             Path = VisualPath = info.FullName;
             OpenCommand = new RelayCommand(() => Open());
             _nativeFileInfo = new NativeFileInfo(Info.FullName);
@@ -87,7 +90,16 @@ namespace FileExplorer.ViewModels
         {
             if (!File.Exists(Path))
             {
+                if (Directory.Exists(Parent.Path))
+                {
+                    Parent.Files.Remove(this);
+                }
+                else
+                {
+                    DirectoryViewModelBase.OnNoExistDirectory(Parent);
+                }
                 MessageBoxService.Instance.ShowError(FileDoesExistException.Msg);
+                return;
             }
             Process.Start(Path);
         }

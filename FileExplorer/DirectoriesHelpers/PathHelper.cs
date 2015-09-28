@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FileExplorer.Exceptions;
+using FileExplorer.Helpers;
 using FileExplorer.ViewModels;
 
 namespace FileExplorer.DirectoriesHelpers
@@ -131,25 +132,34 @@ namespace FileExplorer.DirectoriesHelpers
         }
 
 
-        public static IDirectoryViewModel GetFirsExistDirectory(IDirectoryViewModel directory)
+        public static IDirectoryViewModel ClearNotExistDirectories(IDirectoryViewModel directory)
         {
-
+            IDirectoryViewModel noExistDirectory = null;
             IDirectoryViewModel currentDirectory = directory;
             while (currentDirectory.Parent!=null)
             {
-                if (currentDirectory.Path == "")
+ 
+                if (currentDirectory.Path == "" || Directory.Exists(currentDirectory.Path))
                 {
+                    if (noExistDirectory != null)
+                    {
+                        currentDirectory.SubDirectories.Remove(noExistDirectory);
+                    }
                     return currentDirectory;
                 }
-                if (Directory.Exists(currentDirectory.Path))
-                {
-                    return currentDirectory;
-                }
+                DirectoryWatcher.DeleteFileSystemWatcher(currentDirectory);
+                currentDirectory.SubDirectories.Clear();
+                currentDirectory.Files.Clear();
+                noExistDirectory = currentDirectory;
                 currentDirectory = currentDirectory.Parent;
             }
             // only this pc
             if (currentDirectory.Path == "")
             {
+                if (noExistDirectory != null)
+                {
+                    currentDirectory.SubDirectories.Remove(noExistDirectory);
+                }
                 return currentDirectory;
             }
         

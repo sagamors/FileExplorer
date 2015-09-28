@@ -34,9 +34,16 @@ namespace FileExplorer.Providers
                 var info = directories[index];
                 var directory= new RootDirectoryViewModel(info, Parent);
                 DriveInfo drive = DriveInfoEx.IsDrive(directory.Path);
-                if (drive.IsReady)
+                if (drive != null && drive.IsReady)
                 {
                     _collection.Add(directory);
+                }
+                else
+                {
+                    if (drive == null)
+                    {
+                        _collection.Add(directory);
+                    }
                 }
                 
                 progress.Report((int) ((index + 1) * delta));

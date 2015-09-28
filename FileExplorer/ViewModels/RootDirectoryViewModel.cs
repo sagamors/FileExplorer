@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using FileExplorer.CustomCollections;
 using FileExplorer.DirectoriesHelpers;
-using FileExplorer.Helpers;
 using FileExplorer.Providers;
 using PropertyChanged;
 
@@ -18,7 +17,7 @@ namespace FileExplorer.ViewModels
         public RootDirectoryViewModel() : base(new NativeDirectoryInfo(),null)
         {
             var nativeSubDirectoryProvider = new NativeSubDirectoryProvider((NativeDirectoryInfo)NativeSystemInfo, this);
-            var nativeFilesProvider = new NativeFilesProvider(null);
+            var nativeFilesProvider = new NativeFilesProvider(null,this);
             DisplayName = NativeSystemInfo.DisplayName;
             Path = NativeSystemInfo.Path;
             HasItems = true;
@@ -35,7 +34,7 @@ namespace FileExplorer.ViewModels
             NativeSystemInfo = nativeDirectoryInfo;
             var directoryUnfo = new DirectoryInfo(nativeDirectoryInfo.Path);
             var subDirectoryProvider = new SubDirectoriesProvider(directoryUnfo, this);
-            var filesProvider = new FilesProvider(directoryUnfo);
+            var filesProvider = new FilesProvider(directoryUnfo,this);
             DisplayName = nativeDirectoryInfo.DisplayName;
             Path = nativeDirectoryInfo.Path;
             VisualPath = Parent.VisualPath + "\\" + DisplayName;

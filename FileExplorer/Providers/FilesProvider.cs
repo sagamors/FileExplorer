@@ -9,9 +9,11 @@ namespace FileExplorer.Providers
 {
     class FilesProvider : ItemsProviderBase<ISystemObjectViewModel>
     {
+        public IDirectoryViewModel Parent { get; set; }
         private readonly DirectoryInfo _directoryInfo;
-        public FilesProvider(DirectoryInfo directoryInfo)
+        public FilesProvider(DirectoryInfo directoryInfo, IDirectoryViewModel parent)
         {
+            Parent = parent;
             _directoryInfo = directoryInfo;
         }
 
@@ -27,7 +29,7 @@ namespace FileExplorer.Providers
             {
                 token.ThrowIfCancellationRequested();
                 var file = files[index];
-                _collection.Add(new FileViewModel(file));
+                _collection.Add(new FileViewModel(file, Parent));
                 int newProgress = (int)((index + 1) * delta);
                 if (newProgress - progressCount > 10)
                 {

@@ -18,6 +18,8 @@ namespace FileExplorer.ViewModels
         void Open();
         void UpdateParameters();
         long Size { get; }
+
+        IDirectoryViewModel Parent { get; }
     }
 
 }

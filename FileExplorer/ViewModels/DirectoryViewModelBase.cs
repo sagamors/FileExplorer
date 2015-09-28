@@ -149,7 +149,7 @@ namespace FileExplorer.ViewModels
             }
             catch (Exception ex)
             {
-                var existDirectory = PathHelper.GetFirsExistDirectory(this);
+                var existDirectory = PathHelper.ClearNotExistDirectories(this);
                 MessageBoxService.Instance.ShowError(ex.Message);
                 if (existDirectory!=null)
                 {

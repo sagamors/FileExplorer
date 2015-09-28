@@ -10,10 +10,12 @@ namespace FileExplorer.Providers
 {
     class NativeFilesProvider : ItemsProviderBase<ISystemObjectViewModel>
     {
+        public IDirectoryViewModel Parent { get; set; }
         private readonly NativeDirectoryInfo _directoryInfo;
 
-        public NativeFilesProvider(NativeDirectoryInfo directoryInfo)
+        public NativeFilesProvider(NativeDirectoryInfo directoryInfo, IDirectoryViewModel parent)
         {
+            Parent = parent;
             _directoryInfo = directoryInfo;
         }
 
@@ -32,7 +34,7 @@ namespace FileExplorer.Providers
                 try
                 {
                     token.ThrowIfCancellationRequested();
-                    collection.Add(new FileViewModel(file));
+                    collection.Add(new FileViewModel(file,Parent));
                     progress.Report((int)((index + 1) * delta));
                 }
                 catch (Exception ex)

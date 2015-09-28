@@ -161,7 +161,7 @@ namespace FileExplorer.Helpers
                         break;
                     }
                 }
-                parent.Files.Insert(index, new FileViewModel(new FileInfo(path)));
+                parent.Files.Insert(index, new FileViewModel(new FileInfo(path), parent));
             }
             else
             {
@@ -231,10 +231,13 @@ namespace FileExplorer.Helpers
             }
         }
 
-        public void DeleteFileSystemWatcher(IDirectoryViewModel directoryViewModel)
+        public static void DeleteFileSystemWatcher(IDirectoryViewModel directoryViewModel)
         {
-            directoryViewModel.FileSystemWatcher.EnableRaisingEvents = false;
-            directoryViewModel.FileSystemWatcher.Dispose();
+            if (directoryViewModel.FileSystemWatcher != null)
+            {
+                directoryViewModel.FileSystemWatcher.EnableRaisingEvents = false;
+                directoryViewModel.FileSystemWatcher.Dispose();
+            }
             if (directoryViewModel.SubDirectories.Count != 0)
             {
                 foreach (var directory in directoryViewModel.SubDirectories)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +19,7 @@ namespace FileExplorer.ViewModels
         #region private fields
 
         private List<string> history = new List<string>();
+
         private int _positionHistory = -1;
         private Dispatcher _dispatcher;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -63,12 +63,9 @@ namespace FileExplorer.ViewModels
 
                 _currentPathBroken = false;
                 _fromHistory = false;
-                OnSelectedDirectoryChanged(value);
             }
             get { return _selectedDirectory; }
         }
-
-        public event EventHandler<SelectedDirectoryChangedArgs> SelectedDirectoryChanged;
 
         #endregion
 
@@ -85,14 +82,13 @@ namespace FileExplorer.ViewModels
 
             DirectoryViewModelBase.OpenDirectory += DirectoryViewModelBase_OpenDirectory;
             DirectoryViewModelBase.NoExistDirectory += DirectoryViewModelBaseOnNoExistDirectory;
-
         }
 
         private void DirectoryViewModelBaseOnNoExistDirectory(object sender, DirectoryViewModelBase.NoExistDirectoryArgs e)
         {
-            var directory = PathHelper.GetFirsExistDirectory(e.Directory);
-            e.Directory.Parent.SubDirectories.Remove();
-            _directoryWatcher.DeleteFileSystemWatcher(e.Directory);
+            var directory = PathHelper.ClearNotExistDirectories(e.Directory);
+            e.Directory.Parent.SubDirectories.Remove(directory);
+            DirectoryWatcher.DeleteFileSystemWatcher(e.Directory);
         }
 
         private void DirectoryViewModelBase_OpenDirectory(object sender, DirectoryViewModelBase.OpenDirectoryArgs e)
@@ -106,6 +102,7 @@ namespace FileExplorer.ViewModels
 
         public void BackwardNavigation()
         {
+            string path = history[_positionHistory-1];
             _positionHistory--;
             GoToPath(history[_positionHistory]);
         }
@@ -119,12 +116,6 @@ namespace FileExplorer.ViewModels
         #endregion
 
         #region private methods
-
-        private void SetWithOutSave(string path)
-        {
-            _currentPath = path;
-            OnPropertyChanged("CurrentPath");
-        }
 
         private void ClearAfterPosition()
         {
@@ -151,8 +142,6 @@ namespace FileExplorer.ViewModels
                 }
             });
         }
-
-
 
         private void OnCurrentPathSet()
         {
@@ -254,11 +243,6 @@ namespace FileExplorer.ViewModels
             }, _cancellationTokenSource.Token);
         }
 
-        private void OnSelectedDirectoryChanged(IDirectoryViewModel directoryViewModel)
-        {
-            SelectedDirectoryChanged?.Invoke(this, new SelectedDirectoryChangedArgs(directoryViewModel));
-        }
-
         public class SelectedDirectoryChangedArgs : EventArgs
         {
             public IDirectoryViewModel NewDirectoryViewModel { get; }
@@ -270,14 +254,5 @@ namespace FileExplorer.ViewModels
         }
 
         #endregion
-    }
-
-    public class SelectDirectoryArgs
-    {
-        public IDirectoryViewModel SelecteDirectoryViewModel { get; }
-        public SelectDirectoryArgs(IDirectoryViewModel selecteDirectoryViewModel)
-        {
-            SelecteDirectoryViewModel = selecteDirectoryViewModel;
-        }         
     }
 }
