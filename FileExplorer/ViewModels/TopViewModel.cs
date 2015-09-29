@@ -267,16 +267,6 @@ namespace FileExplorer.ViewModels
             }, _cancellationTokenSource.Token);
         }
 
-        public class SelectedDirectoryChangedArgs : EventArgs
-        {
-            public IDirectoryViewModel NewDirectoryViewModel { get; }
-
-            public SelectedDirectoryChangedArgs(IDirectoryViewModel newDirectoryViewModel)
-            {
-                NewDirectoryViewModel = newDirectoryViewModel;
-            }
-        }
-
         #endregion
     }
 }
