@@ -71,38 +71,43 @@ namespace FileExplorer.Helpers
 
         private void OnChanged(object source, FileSystemEventArgs e)
         {
-            IDirectoryViewModel parent;
-            IDirectoryViewModel child = _pathHelper.GetDirectory(e.FullPath, out parent);
-            bool isFile;
-            int index = -1;
-            isFile = Path.HasExtension(e.FullPath);
-
-            _dispatcher.Invoke(() =>
+            try
             {
-                switch (e.ChangeType)
-                {
-                    case WatcherChangeTypes.Created:
-                        Create(isFile, parent, e.FullPath);
-                        break;
-                    case WatcherChangeTypes.Changed:
-                        if (isFile)
-                        {
-                            index = FindFileIndex(parent, e.FullPath);
-                            if (index == -1) return;
-                            parent.Files[index].UpdateParameters();
-                        }
-                        else
-                        {
-                            if (child != null)
-                                child.UpdateParameters();
-                        }
-                        break;
+                IDirectoryViewModel parent;
+                IDirectoryViewModel child = _pathHelper.GetDirectory(e.FullPath, out parent);
+                bool isFile;
+                int index = -1;
+                isFile = Path.HasExtension(e.FullPath);
 
-                    case WatcherChangeTypes.Deleted:
-                        Delete(isFile, parent, child, e.FullPath);
-                        break;
-                }
-            });
+                _dispatcher.Invoke(() =>
+                {
+                    switch (e.ChangeType)
+                    {
+                        case WatcherChangeTypes.Created:
+                            Create(isFile, parent, e.FullPath);
+                            break;
+                        case WatcherChangeTypes.Changed:
+                            if (isFile)
+                            {
+                                index = FindFileIndex(parent, e.FullPath);
+                                if (index == -1) return;
+                                parent.Files[index].UpdateParameters();
+                            }
+                            else
+                            {
+                                if (child != null)
+                                    child.UpdateParameters();
+                            }
+                            break;
+
+                        case WatcherChangeTypes.Deleted:
+                            Delete(isFile, parent, child, e.FullPath);
+                            break;
+                    }
+                });
+            }
+            catch (Exception) { }
+            
         }
 
         private int FindFileIndex(IDirectoryViewModel directoryViewModel, string path)

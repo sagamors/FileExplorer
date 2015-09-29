@@ -41,9 +41,5 @@ namespace FileExplorer.ViewModels
 
         #endregion
 
-
-
-        // Define the event handlers.
-
     }
 }
