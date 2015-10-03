@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Threading;
-using FileExplorer.DirectoriesHelpers;
 
 namespace FileExplorer.CustomCollections
 {

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Windows.Threading;
+﻿using System.Windows.Threading;
 using FileExplorer.DirectoriesHelpers;
 using FileExplorer.Helpers;
 
